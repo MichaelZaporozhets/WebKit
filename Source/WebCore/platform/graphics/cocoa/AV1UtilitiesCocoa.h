@@ -28,6 +28,8 @@
 #include <wtf/Platform.h>
 #if PLATFORM(COCOA) && ENABLE(AV1)
 
+#include <optional>
+
 namespace WebCore {
 
 struct AV1CodecConfigurationRecord;
