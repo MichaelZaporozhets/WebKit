@@ -26,7 +26,7 @@
 #import "config.h"
 #import "AutomaticReloadPaymentRequest.h"
 
-#if HAVE(PASSKIT_AUTOMATIC_RELOAD_PAYMENTS)
+#if ENABLE(APPLE_PAY_AUTOMATIC_RELOAD_PAYMENTS)
 
 #import <WebCore/ApplePayAutomaticReloadPaymentRequest.h>
 #import <WebCore/PaymentSummaryItems.h>
@@ -49,4 +49,4 @@ RetainPtr<PKAutomaticReloadPaymentRequest> platformAutomaticReloadPaymentRequest
 
 } // namespace WebKit
 
-#endif // HAVE(PASSKIT_AUTOMATIC_RELOAD_PAYMENTS)
+#endif // ENABLE(APPLE_PAY_AUTOMATIC_RELOAD_PAYMENTS)

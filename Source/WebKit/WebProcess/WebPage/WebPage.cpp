@@ -3202,7 +3202,7 @@ void WebPage::setDeviceScaleFactor(float scaleFactor)
     page->setDeviceScaleFactor(scaleFactor);
 
     // Tell all our plug-in views that the device scale factor changed.
-#if PLATFORM(MAC)
+#if PLATFORM(MAC) && ENABLE(PDF_PLUGIN)
     for (Ref pluginView : m_pluginViews)
         pluginView->setDeviceScaleFactor(scaleFactor);
 

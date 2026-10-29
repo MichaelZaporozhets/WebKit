@@ -26,7 +26,7 @@
 #import "config.h"
 #import "DeferredPaymentRequest.h"
 
-#if HAVE(PASSKIT_DEFERRED_PAYMENTS)
+#if ENABLE(APPLE_PAY_DEFERRED_PAYMENTS)
 
 #import <WebCore/ApplePayDeferredPaymentRequest.h>
 #import <WebCore/PaymentSummaryItems.h>
@@ -60,4 +60,4 @@ RetainPtr<PKDeferredPaymentRequest> platformDeferredPaymentRequest(const ApplePa
 
 } // namespace WebKit
 
-#endif // HAVE(PASSKIT_DEFERRED_PAYMENTS)
+#endif // ENABLE(APPLE_PAY_DEFERRED_PAYMENTS)

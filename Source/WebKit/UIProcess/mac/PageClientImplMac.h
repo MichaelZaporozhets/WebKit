@@ -220,6 +220,7 @@ private:
 
     void registerInsertionUndoGrouping() override;
 
+#if ENABLE(PDF_HUD)
     void createPDFHUD(PDFPluginIdentifier, WebCore::FrameIdentifier, const WebCore::IntRect&) override;
     void updatePDFHUDLocation(PDFPluginIdentifier, const WebCore::IntRect&) override;
 #if ENABLE(AX_PDF_SUPPORT)
@@ -228,6 +229,7 @@ private:
     void removePDFHUD(PDFPluginIdentifier) override;
     void removeAllPDFHUDs() override;
     void showPDFHUD(PDFPluginIdentifier) final;
+#endif
 
 #if ENABLE(FULLSCREEN_API)
     WebFullScreenManagerProxyClient& NODELETE fullScreenManagerProxyClient() final;

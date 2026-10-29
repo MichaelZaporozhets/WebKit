@@ -38,7 +38,7 @@
 #include <WebCore/WebAudioBufferList.h>
 #include <wtf/TZoneMallocInlines.h>
 
-#if PLATFORM(COCOA) && ENABLE(GPU_PROCESS)
+#if PLATFORM(COCOA) && ENABLE(GPU_PROCESS) && ENABLE(WEB_AUDIO)
 
 namespace WebKit {
 using namespace WebCore;
@@ -158,4 +158,4 @@ void RemoteAudioSourceProviderManager::setVolume(WebCore::MediaPlayerIdentifier 
 
 }
 
-#endif // PLATFORM(COCOA) && ENABLE(GPU_PROCESS)
+#endif // PLATFORM(COCOA) && ENABLE(GPU_PROCESS) && ENABLE(WEB_AUDIO)

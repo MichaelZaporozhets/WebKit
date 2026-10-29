@@ -26,7 +26,7 @@
 #import "config.h"
 #import "PaymentTokenContext.h"
 
-#if HAVE(PASSKIT_MULTI_MERCHANT_PAYMENTS)
+#if ENABLE(APPLE_PAY_MULTI_MERCHANT_PAYMENTS)
 
 #import "WebPaymentCoordinatorProxyCocoa.h"
 #import <WebCore/ApplePayPaymentTokenContext.h>
@@ -55,4 +55,4 @@ RetainPtr<NSArray<PKPaymentTokenContext *>> platformPaymentTokenContexts(const V
 
 } // namespace WebKit
 
-#endif // HAVE(PASSKIT_MULTI_MERCHANT_PAYMENTS)
+#endif // ENABLE(APPLE_PAY_MULTI_MERCHANT_PAYMENTS)

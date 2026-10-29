@@ -1171,10 +1171,8 @@ def generate_one_impl(type, template_argument, serialized_types):
             member = type.members[idx]
             if member.condition is not None:
                 result.append(f'#if {member.condition}')
-            if idx == 0:
-                result.append(f'    {member.name}')
-            else:
-                result.append(f'    , {member.name}')
+            # Trailing commas: the first member may be conditional (e.g. ApplePayLogoSystemImage).
+            result.append(f'    {member.name},')
             if member.condition is not None:
                 result.append('#endif')
         result.append('};')

@@ -26,7 +26,7 @@
 #import "config.h"
 #import "DisbursementRequest.h"
 
-#if HAVE(PASSKIT_DISBURSEMENTS)
+#if ENABLE(APPLE_PAY_DISBURSEMENTS)
 
 #import "WebPaymentCoordinatorProxyCocoa.h"
 
@@ -81,4 +81,4 @@ RetainPtr<PKDisbursementPaymentRequest> platformDisbursementRequest(const AppleP
 
 } // namespace WebKit
 
-#endif // HAVE(PASSKIT_DISBURSEMENTS)
+#endif // ENABLE(APPLE_PAY_DISBURSEMENTS)

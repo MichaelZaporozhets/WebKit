@@ -84,7 +84,9 @@ set(ENABLE_TELEPHONE_NUMBER_DETECTION OFF CACHE BOOL "" FORCE)
 # EditingHTMLConverter, WebContentReaderCocoa, RenderThemeCocoa).
 set(ENABLE_ATTACHMENT_ELEMENT ON CACHE BOOL "" FORCE)
 set(ENABLE_APPLICATION_MANIFEST ON CACHE BOOL "" FORCE)    # tiny; _WKApplicationManifest.mm is compiled unconditionally on Cocoa
-set(ENABLE_SERVICE_CONTROLS OFF CACHE BOOL "" FORCE)     # macOS Services menu
+# SERVICE_CONTROLS stays ON: WebContextMenuProxyMac.mm nests the context-menu image helpers
+# inside its ENABLE(SERVICE_CONTROLS) block (macOS always has it).
+set(ENABLE_SERVICE_CONTROLS ON CACHE BOOL "" FORCE)
 set(ENABLE_POINTER_LOCK OFF CACHE BOOL "" FORCE)
 set(ENABLE_MOUSE_CURSOR_SCALE OFF CACHE BOOL "" FORCE)
 set(ENABLE_CURSOR_VISIBILITY OFF CACHE BOOL "" FORCE)

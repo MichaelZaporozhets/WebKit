@@ -26,7 +26,7 @@
 #import "config.h"
 #import "RecurringPaymentRequest.h"
 
-#if HAVE(PASSKIT_RECURRING_PAYMENTS)
+#if ENABLE(APPLE_PAY_RECURRING_PAYMENTS)
 
 #import <WebCore/ApplePayRecurringPaymentRequest.h>
 #import <WebCore/PaymentSummaryItems.h>
@@ -51,4 +51,4 @@ RetainPtr<PKRecurringPaymentRequest> platformRecurringPaymentRequest(const Apple
 
 } // namespace WebKit
 
-#endif // HAVE(PASSKIT_RECURRING_PAYMENTS)
+#endif // ENABLE(APPLE_PAY_RECURRING_PAYMENTS)

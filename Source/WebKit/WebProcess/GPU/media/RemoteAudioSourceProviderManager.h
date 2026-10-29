@@ -25,7 +25,7 @@
 
 #pragma once
 
-#if PLATFORM(COCOA) && ENABLE(GPU_PROCESS)
+#if PLATFORM(COCOA) && ENABLE(GPU_PROCESS) && ENABLE(WEB_AUDIO)
 
 #include "SharedCARingBuffer.h"
 #include "WorkQueueMessageReceiver.h"
@@ -76,4 +76,4 @@ private:
 
 } // namespace WebKit
 
-#endif // PLATFORM(COCOA) && ENABLE(GPU_PROCESS)
+#endif // PLATFORM(COCOA) && ENABLE(GPU_PROCESS) && ENABLE(WEB_AUDIO)
