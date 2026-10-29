@@ -982,7 +982,9 @@
 #endif
 
 #if PLATFORM(COCOA)
+#if !defined(HAVE_WEBGPU_IMPLEMENTATION)
 #define HAVE_WEBGPU_IMPLEMENTATION 1
+#endif
 // FIXME: PlatformHave.h should not depend or defined ENABLE macros.
 #if !defined(ENABLE_WEBGPU_SWIFT)
 #define ENABLE_WEBGPU_SWIFT 0
@@ -1001,7 +1003,7 @@
 #define HAVE_UNIFIED_SPEECHSYNTHESIS_FIX_FOR_81465164 1
 #endif
 
-#if PLATFORM(MAC)
+#if PLATFORM(MAC) && !defined(HAVE_SCREEN_CAPTURE_KIT)
 #define HAVE_SCREEN_CAPTURE_KIT 1
 #endif
 

@@ -46,8 +46,10 @@ set(ENABLE_MEDIA_SESSION_COORDINATOR OFF CACHE BOOL "" FORCE)
 set(ENABLE_WIRELESS_PLAYBACK_TARGET ON CACHE BOOL "" FORCE)
 set(ENABLE_PICTURE_IN_PICTURE_API OFF CACHE BOOL "" FORCE)
 set(ENABLE_VIDEO_PRESENTATION_MODE OFF CACHE BOOL "" FORCE)
-set(ENABLE_AVF_CAPTIONS OFF CACHE BOOL "" FORCE)
-set(ENABLE_DATACUE_VALUE OFF CACHE BOOL "" FORCE)
+# AVF_CAPTIONS / DATACUE_VALUE stay ON: tiny, and MediaPlayerPrivateAVFoundationObjC.mm uses
+# m_metadataTrack outside the header's ENABLE(DATACUE_VALUE) guard.
+set(ENABLE_AVF_CAPTIONS ON CACHE BOOL "" FORCE)
+set(ENABLE_DATACUE_VALUE ON CACHE BOOL "" FORCE)
 set(ENABLE_WEB_AUDIO OFF CACHE BOOL "" FORCE)
 # ENABLE_VIDEO stays ON on purpose: <video>/<audio> must still lay out as replaced elements
 # with their shadow-DOM controls exactly like Safari. Media *loading* is disabled at runtime

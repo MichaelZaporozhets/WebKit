@@ -26,10 +26,8 @@
 #import "config.h"
 #import "AudioVideoRendererAVFObjC.h"
 
-#if ENABLE(MEDIA_STREAM)
-#import "AudioMediaStreamTrackRenderer.h"
-#endif
 #import "CDMFairPlayStreaming.h"
+#import "DefaultAudioOutputDeviceID.h"
 #import "CDMInstanceFairPlayStreamingAVFObjC.h"
 #import "CDMLogging.h"
 #import "CDMSessionAVContentKeySession.h"
@@ -91,15 +89,6 @@ static void setSynchronizerScreenReserved(AVSampleBufferRenderSynchronizer *, bo
 @end
 
 namespace WebCore {
-
-static inline bool isDefaultAudioOutputDeviceID(const String& deviceID)
-{
-#if ENABLE(MEDIA_STREAM)
-    return deviceID.isEmpty() || deviceID == AudioMediaStreamTrackRenderer::defaultDeviceID();
-#else
-    return deviceID.isEmpty() || deviceID == "default"_s;
-#endif
-}
 
 WTF_MAKE_TZONE_ALLOCATED_IMPL(AudioVideoRendererAVFObjC);
 

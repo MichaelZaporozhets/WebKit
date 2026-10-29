@@ -31,10 +31,8 @@
 #import "AVAssetMIMETypeCache.h"
 #import "AVAssetTrackUtilities.h"
 #import "AVTrackPrivateAVFObjCImpl.h"
-#if ENABLE(MEDIA_STREAM)
-#import "AudioMediaStreamTrackRenderer.h"
-#endif
 #import "AudioSourceProviderAVFObjC.h"
+#import "DefaultAudioOutputDeviceID.h"
 #import "AudioTrackPrivateAVFObjC.h"
 #import "AuthenticationChallenge.h"
 #import "CDMInstanceFairPlayStreamingAVFObjC.h"
@@ -228,16 +226,6 @@ enum MediaPlayerAVFoundationObservationContext {
 @end
 
 namespace WebCore {
-
-static inline bool isDefaultAudioOutputDeviceID(const String& deviceID)
-{
-#if ENABLE(MEDIA_STREAM)
-    return deviceID.isEmpty() || deviceID == AudioMediaStreamTrackRenderer::defaultDeviceID();
-#else
-    return deviceID.isEmpty() || deviceID == "default"_s;
-#endif
-}
-
 static String convertEnumerationToString(AVPlayerTimeControlStatus enumerationValue)
 {
     static const std::array<NeverDestroyed<String>, 3> values {
@@ -3732,11 +3720,15 @@ void MediaPlayerPrivateAVFoundationObjC::setBufferingPolicy(MediaPlayer::Bufferi
 
     m_avPlayer.get().resourceConservationLevelWhilePaused = static_cast<AVPlayerResourceConservationLevel>(policy);
 
+#if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
     // FIXME: Remove this workaround once rdar://123901202 is fixed.
     if (isMovingFromResourcesPurgeableBufferPolicy) {
         if (RefPtr provider = m_provider)
             provider->recreateAudioMixIfNeeded();
     }
+#else
+    UNUSED_VARIABLE(isMovingFromResourcesPurgeableBufferPolicy);
+#endif
 
 #else
     switch (policy) {
