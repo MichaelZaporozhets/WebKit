@@ -39,6 +39,7 @@
 #import <WebKit/WebKit.h>
 #import <WebKit/_WKDownload.h>
 #import <WebKit/_WKExperimentalFeature.h>
+#import <WebKit/_WKFeature.h>
 #import <WebKit/_WKInternalDebugFeature.h>
 #import <WebKit/_WKProcessPoolConfiguration.h>
 #import <WebKit/_WKWebsiteDataStoreConfiguration.h>
@@ -78,6 +79,80 @@ const NSActivityOptions ActivityOptions =
      NSActivityLatencyCritical) &
     ~(NSActivitySuddenTerminationDisabled |
     NSActivityAutomaticTerminationDisabled);
+
+#pragma mark Magpie-lean runtime tuning
+
+// Both hooks read a "Key=Value;Key2=Value" list from the environment so the lean build can be
+// A/B tested from a harness (Tools/Playwright/bench) without recompiling.
+//
+//   MAGPIE_WEBKIT_PREFS  WKPreferences. A key is matched against WebKit's feature list first
+//                        ([WKPreferences _features], i.e. any bool preference with a status that
+//                        exposes it: UseGPUProcessForDOMRenderingEnabled=0, ServiceWorkersEnabled=0,
+//                        ...), and otherwise applied with KVC so embedder-status preferences work
+//                        through their private setters (_avFoundationEnabled=0, _usesPageCache=0).
+//   MAGPIE_WEBKIT_POOL   _WKProcessPoolConfiguration properties via KVC
+//                        (prewarmsProcessesAutomatically=0;usesWebProcessCache=0;pageCacheEnabled=0).
+static NSDictionary<NSString *, NSString *> *parseKeyValueEnvironment(const char *variable)
+{
+    const char *raw = getenv(variable);
+    if (!raw || !*raw)
+        return nil;
+    NSMutableDictionary *result = [NSMutableDictionary dictionary];
+    for (NSString *pair in [@(raw) componentsSeparatedByString:@";"]) {
+        NSRange eq = [pair rangeOfString:@"="];
+        if (eq.location == NSNotFound)
+            continue;
+        NSString *key = [[pair substringToIndex:eq.location] stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+        NSString *value = [[pair substringFromIndex:eq.location + 1] stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+        if ([key length])
+            result[key] = value;
+    }
+    return result;
+}
+
+static NSNumber *numberFromSetting(NSString *value)
+{
+    NSString *lower = [value lowercaseString];
+    if ([lower isEqualToString:@"true"] || [lower isEqualToString:@"yes"] || [lower isEqualToString:@"on"])
+        return @YES;
+    if ([lower isEqualToString:@"false"] || [lower isEqualToString:@"no"] || [lower isEqualToString:@"off"])
+        return @NO;
+    return @([value longLongValue]);
+}
+
+static void applyEnvironmentPreferences(WKPreferences *preferences)
+{
+    NSDictionary *settings = parseKeyValueEnvironment("MAGPIE_WEBKIT_PREFS");
+    if (![settings count])
+        return;
+    NSMutableDictionary *featuresByKey = [NSMutableDictionary dictionary];
+    for (_WKFeature *feature in [WKPreferences _features])
+        featuresByKey[feature.key] = feature;
+    [settings enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, BOOL *) {
+        NSNumber *number = numberFromSetting(value);
+        if (_WKFeature *feature = featuresByKey[key]) {
+            [preferences _setEnabled:[number boolValue] forFeature:feature];
+            return;
+        }
+        @try {
+            [preferences setValue:number forKey:key];
+        } @catch (NSException *exception) {
+            NSLog(@"MAGPIE_WEBKIT_PREFS: no feature or KVC property named '%@' (%@)", key, exception.reason);
+        }
+    }];
+}
+
+static void applyEnvironmentProcessPoolConfiguration(_WKProcessPoolConfiguration *configuration)
+{
+    NSDictionary *settings = parseKeyValueEnvironment("MAGPIE_WEBKIT_POOL");
+    [settings enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, BOOL *) {
+        @try {
+            [configuration setValue:numberFromSetting(value) forKey:key];
+        } @catch (NSException *exception) {
+            NSLog(@"MAGPIE_WEBKIT_POOL: no property named '%@' on _WKProcessPoolConfiguration (%@)", key, exception.reason);
+        }
+    }];
+}
 
 @implementation BrowserAppDelegate
 
@@ -243,8 +318,10 @@ const NSActivityOptions ActivityOptions =
         #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         _WKProcessPoolConfiguration *processConfiguration = [[[_WKProcessPoolConfiguration alloc] init] autorelease];
         processConfiguration.forceOverlayScrollbars = YES;
+        applyEnvironmentProcessPoolConfiguration(processConfiguration);
         configuration.processPool = [[[WKProcessPool alloc] _initWithConfiguration:processConfiguration] autorelease];
         #pragma clang diagnostic pop
+        applyEnvironmentPreferences(configuration.preferences);
     }
     return configuration;
 }
@@ -364,6 +441,7 @@ const NSActivityOptions ActivityOptions =
     #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     _WKProcessPoolConfiguration *processConfiguration = [[[_WKProcessPoolConfiguration alloc] init] autorelease];
     processConfiguration.forceOverlayScrollbars = YES;
+    applyEnvironmentProcessPoolConfiguration(processConfiguration);
     #pragma clang diagnostic pop
     _WKWebsiteDataStoreConfiguration *dataStoreConfiguration = [[[_WKWebsiteDataStoreConfiguration alloc] initNonPersistentConfiguration] autorelease];
     if (!proxyServer || ![proxyServer length])
