@@ -6,6 +6,13 @@ if (ENABLE_MINIBROWSER AND ENABLE_WEBKIT)
     add_subdirectory(MiniBrowser/mac)
 endif ()
 
+# Playwright.app: the embedder playwright-core drives over --inspector-pipe.
+# Sources come from microsoft/playwright browser_patches/webkit/embedder/Playwright.
+option(ENABLE_PLAYWRIGHT "Build the Playwright.app embedder shell" ON)
+if (ENABLE_PLAYWRIGHT AND ENABLE_WEBKIT)
+    add_subdirectory(Playwright/mac)
+endif ()
+
 # WebKitTestRunner for layout tests (https://bugs.webkit.org/show_bug.cgi?id=231776).
 # DumpRenderTree is WK1-only -- not built here.
 option(ENABLE_WEBKIT_TEST_RUNNER "Build WebKitTestRunner for layout tests" ON)

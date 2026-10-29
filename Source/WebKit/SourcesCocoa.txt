@@ -660,6 +660,13 @@ UIProcess/mac/WKTextAnimationManagerMac.mm @nonARC
 UIProcess/mac/WKViewLayoutStrategy.mm @nonARC
 UIProcess/mac/WebViewImpl.mm @nonARC
 
+// Playwright begin (Xcode build picks these up from WebKit.xcodeproj; CMake needs them listed)
+UIProcess/mac/InspectorPlaywrightAgentClientMac.mm @nonARC
+UIProcess/mac/PageInspectorTargetProxyMac.mm @nonARC
+UIProcess/mac/WebPageInspectorEmulationAgentMac.mm @nonARC
+UIProcess/mac/WebPageInspectorInputAgentMac.mm @nonARC
+// Playwright end
+
 UIProcess/Media/cocoa/AudioSessionRoutingArbitratorProxyCocoa.mm @nonARC
 UIProcess/Media/cocoa/MediaUsageManagerCocoa.mm @nonARC
 

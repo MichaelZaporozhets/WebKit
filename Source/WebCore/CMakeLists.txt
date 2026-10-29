@@ -2270,6 +2270,8 @@ if (USE_ANGLE_EGL)
     )
 elseif (USE_LIBEPOXY)
     list(APPEND WebCore_LIBRARIES Epoxy::Epoxy)
+elseif (APPLE)
+    # Magpie-lean: Cocoa without WebGL/ANGLE has no GL consumer at all; nothing to link.
 else ()
     list(APPEND WebCore_LIBRARIES OpenGL::GLES)
 

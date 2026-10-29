@@ -197,7 +197,12 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(WebKitTestRunner_DERIVED_SOURCES_DIR "${CMAKE_BINARY_DIR}/DerivedSources/WebKitTestRunner")
 set(TestRunnerShared_DERIVED_SOURCES_DIR "${CMAKE_BINARY_DIR}/DerivedSources/TestRunnerShared")
 
-SET_AND_EXPOSE_TO_BUILD(USE_LIBWEBRTC TRUE)
+# Magpie-lean: libwebrtc is only needed for WebRTC; don't build/link the 14MB dylib otherwise.
+if (ENABLE_WEB_RTC)
+    SET_AND_EXPOSE_TO_BUILD(USE_LIBWEBRTC TRUE)
+else ()
+    SET_AND_EXPOSE_TO_BUILD(USE_LIBWEBRTC FALSE)
+endif ()
 
 if (NOT ENABLE_WEBGPU)
     set(_webgpu_fwd "${CMAKE_BINARY_DIR}/WebGPU-stub/WebGPU")
@@ -222,7 +227,12 @@ set(PAL_LIBRARY_TYPE STATIC)
 
 set(CMAKE_LINK_DEPENDS_NO_SHARED ON)
 
-set(USE_ANGLE_EGL ON)
+# Magpie-lean: ANGLE is only consumed by WebGL on Cocoa; skip it when WebGL is compiled out.
+if (ENABLE_WEBGL)
+    set(USE_ANGLE_EGL ON)
+else ()
+    set(USE_ANGLE_EGL OFF)
+endif ()
 
 function(WEBKIT_ADD_SDK_IMPORTED_LIBRARY _target _library)
     if (NOT TARGET ${_target})

@@ -795,6 +795,8 @@ elseif (USE_ANGLE_EGL)
         ANGLE::GLES
         ANGLE::EGL
     )
+elseif (APPLE)
+    # Magpie-lean: Cocoa without WebGL/ANGLE has no GL consumer at all; nothing to link.
 else ()
     list(APPEND WebKit_SYSTEM_INCLUDE_DIRECTORIES
         ${EGL_INCLUDE_DIRS}

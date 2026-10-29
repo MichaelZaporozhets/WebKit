@@ -1,0 +1,36 @@
+#!/bin/bash
+# Build the Magpie-lean, Playwright-compatible WebKit (CMake Mac port).
+#
+#   Tools/Scripts/build-magpie-webkit            # configure (first time) + build
+#   Tools/Scripts/build-magpie-webkit --reconfigure
+#
+# Output: WebKitBuild/cmake-mac/Release/{Playwright.app,*.framework,pw_run.sh}
+# Point Magpie at it with:
+#   PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH=$PWD/WebKitBuild/cmake-mac/Release/pw_run.sh
+#
+# Environment knobs:
+#   MAGPIE_SWIFTC=/path/to/swiftc   use a standalone Swift toolchain instead of Xcode's
+#                                   (see ~/.pi/agent/skills/webkit-contributing/references/build-troubleshooting.md #5)
+#   MAGPIE_LTO=thin|full            add -flto; off by default (link time vs. runtime trade-off, measure first)
+#   MAGPIE_EXTRA_CMAKEARGS="..."    anything else to forward to cmake
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+BUILD_DIR="$ROOT/WebKitBuild/cmake-mac/Release"
+LEAN_CACHE="$ROOT/Tools/Playwright/magpie-lean.cmake"
+
+if [[ "${1:-}" == "--reconfigure" ]]; then
+    shift
+    rm -f "$BUILD_DIR/CMakeCache.txt"
+fi
+
+CMAKEARGS="-C $LEAN_CACHE -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF"
+[[ -n "${MAGPIE_SWIFTC:-}" ]] && CMAKEARGS="$CMAKEARGS -DCMAKE_Swift_COMPILER=$MAGPIE_SWIFTC"
+[[ -n "${MAGPIE_LTO:-}" ]] && CMAKEARGS="$CMAKEARGS -DLTO_MODE=$MAGPIE_LTO"
+[[ -n "${MAGPIE_EXTRA_CMAKEARGS:-}" ]] && CMAKEARGS="$CMAKEARGS $MAGPIE_EXTRA_CMAKEARGS"
+
+cd "$ROOT"
+# Strip rbenv/asdf Ruby state: WebKit's code generators expect the system Ruby.
+exec env -u GEM_HOME -u GEM_PATH -u RUBYOPT -u BUNDLE_GEMFILE \
+    "$ROOT/Tools/Scripts/build-webkit" --release --cmake --port=Mac \
+    --cmakeargs="$CMAKEARGS" "$@"
