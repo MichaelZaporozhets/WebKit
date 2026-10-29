@@ -438,6 +438,17 @@ static RetainPtr<CFDictionaryRef> imagePropertiesForDestinationUTIAndQuality(CFS
         const void* value = compressionQuality.get();
         return adoptCF(CFDictionaryCreate(0, &key, &value, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
     }
+    if (preferFastPNGEncoding() && CFEqual(destinationUTI, CFSTR("public.png"))) {
+        // Skip ImageIO's adaptive PNG filter search: ~3.5x faster encoding, same pixels, larger file.
+        int filter = IMAGEIO_PNG_FILTER_NONE;
+        auto filterNumber = adoptCF(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &filter));
+        const void* pngKey = kCGImagePropertyPNGCompressionFilter;
+        const void* pngValue = filterNumber.get();
+        auto pngProperties = adoptCF(CFDictionaryCreate(0, &pngKey, &pngValue, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+        const void* key = kCGImagePropertyPNGDictionary;
+        const void* value = pngProperties.get();
+        return adoptCF(CFDictionaryCreate(0, &key, &value, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+    }
     return nullptr;
 
     // FIXME: Setting kCGImageDestinationBackgroundColor to black for JPEG images in imageProperties would save some math

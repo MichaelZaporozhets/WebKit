@@ -82,6 +82,12 @@ String encodeDataURL(const NativeImage& image, const String& mimeType, std::opti
     return makeString("data:"_s, mimeType, ";base64,"_s, base64Encoded(encodedData));
 }
 
+bool& preferFastPNGEncoding()
+{
+    static bool prefer { false };
+    return prefer;
+}
+
 String encodeDataURL(const RefPtr<NativeImage>& image, const String& mimeType, std::optional<double> quality)
 {
     if (!image)

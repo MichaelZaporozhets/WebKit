@@ -96,6 +96,7 @@
 #include <wtf/TZoneMallocInlines.h>
 #include <wtf/TimeZone.h>
 #include <wtf/text/Base64.h>
+#include <wtf/SetForScope.h>
 #include <wtf/text/MakeString.h>
 #include <wtf/text/StringBuilder.h>
 
@@ -1193,6 +1194,8 @@ Inspector::Protocol::ErrorStringOr<String> InspectorPageAgent::snapshotRect(int 
         encodingQuality = quality.value_or(100) / 100.0;
         break;
     }
+    // Automation screenshots are decoded right away by the client; favour encode speed over size.
+    SetForScope fastPNG { preferFastPNGEncoding(), mimeType == "image/png"_s };
     return encodeDataURL(WTF::move(snapshot), mimeType, encodingQuality);
 }
 

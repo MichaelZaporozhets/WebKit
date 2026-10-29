@@ -52,6 +52,11 @@ WEBCORE_EXPORT Vector<uint8_t> encodeData(RefPtr<ImageBuffer>&&, const String& m
 String encodeDataURL(const PixelBuffer&, const String& mimeType, std::optional<double> quality = std::nullopt);
 String encodeDataURL(const NativeImage&, const String& mimeType, std::optional<double> quality = std::nullopt);
 WEBCORE_EXPORT String encodeDataURL(const RefPtr<NativeImage>&, const String& mimeType, std::optional<double> quality = std::nullopt);
+
+// When set, PNG encoders may trade file size for encode time (e.g. ImageIO's FILTER_NONE, ~3.5x
+// faster on UI-like frames at ~1.4x the bytes). Pixels are unaffected. Used by the Web Inspector
+// snapshot path, whose output goes straight to an automation client. Scope it with SetForScope.
+WEBCORE_EXPORT bool& preferFastPNGEncoding();
 WEBCORE_EXPORT String encodeDataURL(RefPtr<ImageBuffer>&&, const String& mimeType, std::optional<double> quality = std::nullopt);
 
 #if USE(CG)
