@@ -9,9 +9,9 @@
 #   PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH=$PWD/WebKitBuild/cmake-mac/Release/pw_run.sh
 #
 # Environment knobs:
-#   MAGPIE_SWIFTC=/path/to/swiftc   Swift compiler. Defaults to ~/swift-6.3-toolchain/usr/bin/swiftc when present:
-#                                   Xcode 26.3's bundled Swift 6.2.4 fails to build the WebKit_Internal clang
-#                                   module (WebPageProxyInternals.h) that _WKTextExtraction.swift imports.
+#   MAGPIE_SWIFTC=/path/to/swiftc   Swift compiler. Defaults to the Command Line Tools swiftc when it is a
+#                                   6.3+ (Xcode 26.3 bundles Swift 6.2.4, which lacks -emit-clang-header-min-access
+#                                   and cannot build the WebKit_Internal clang module), else ~/swift-6.3-toolchain.
 #                                   (see ~/.pi/agent/skills/webkit-contributing/references/build-troubleshooting.md #5)
 #   MAGPIE_LTO=thin|full            add -flto; off by default (link time vs. runtime trade-off, measure first)
 #   MAGPIE_EXTRA_CMAKEARGS="..."    anything else to forward to cmake
@@ -27,8 +27,13 @@ if [[ "${1:-}" == "--reconfigure" ]]; then
 fi
 
 CMAKEARGS="-C $LEAN_CACHE -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF"
-if [[ -z "${MAGPIE_SWIFTC:-}" && -x "$HOME/swift-6.3-toolchain/usr/bin/swiftc" ]]; then
-    MAGPIE_SWIFTC="$HOME/swift-6.3-toolchain/usr/bin/swiftc"
+if [[ -z "${MAGPIE_SWIFTC:-}" ]]; then
+    clt=/Library/Developer/CommandLineTools/usr/bin/swiftc
+    if [[ -x "$clt" ]] && "$clt" --version 2>&1 | grep -Eq 'Swift version (6\.[3-9]|[7-9]\.)'; then
+        MAGPIE_SWIFTC="$clt"
+    elif [[ -x "$HOME/swift-6.3-toolchain/usr/bin/swiftc" ]]; then
+        MAGPIE_SWIFTC="$HOME/swift-6.3-toolchain/usr/bin/swiftc"
+    fi
 fi
 [[ -n "${MAGPIE_SWIFTC:-}" ]] && CMAKEARGS="$CMAKEARGS -DCMAKE_Swift_COMPILER=$MAGPIE_SWIFTC"
 [[ -n "${MAGPIE_LTO:-}" ]] && CMAKEARGS="$CMAKEARGS -DLTO_MODE=$MAGPIE_LTO"
