@@ -3166,6 +3166,7 @@ ALLOW_DEPRECATED_IMPLEMENTATIONS_BEGIN
         backingObject->performDismissActionIgnoringResult();
     else if (AXObjectCache::clientIsInTestMode() && [action isEqualToString:@"AXLogTrees"])
         [self _accessibilityPrintTrees];
+#if ENABLE(WRITING_TOOLS)
     else if ([action isEqualToString:NSAccessibilityShowWritingToolsAction]) {
         Accessibility::performFunctionOnMainThread([protectedSelf = retainPtr(self)] {
             RefPtr<AXCoreObject> backingObject = protectedSelf.get().updateObjectBackingStore;
@@ -3173,6 +3174,7 @@ ALLOW_DEPRECATED_IMPLEMENTATIONS_BEGIN
                 page->chrome().client().showWritingToolsAffordance();
         });
     }
+#endif
 }
 ALLOW_DEPRECATED_IMPLEMENTATIONS_END
 
