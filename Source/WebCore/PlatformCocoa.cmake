@@ -1040,8 +1040,6 @@ list(REMOVE_ITEM WebCore_PRIVATE_FRAMEWORK_HEADERS
     page/WebKitNamespace.h
 
     platform/AbortableTaskQueue.h
-    platform/PlatformTouchEvent.h
-    platform/PlatformTouchPoint.h
     platform/StringEntropyHelpers.h
 
     platform/encryptedmedia/CDMUtilities.h

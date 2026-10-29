@@ -126,6 +126,8 @@ set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF
     ENABLE_VP9                                  # media codec registration; nothing plays media here
     ENABLE_VORBIS
     ENABLE_OPUS
+    ENABLE_FEATURE_DEFAULT_VALIDATION           # build-time assert that "mature" prefs default on; SpeechRecognitionEnabled
+                                                # legitimately defaults off without MEDIA_STREAM
     CACHE STRING "" FORCE)
 
 # --- Deliberately KEPT (candidates for a later, measured round; see docs/magpie-lean.md):

@@ -103,6 +103,7 @@
 
 #if PLATFORM(COCOA)
 #include "CocoaWindow.h"
+#include <wtf/WeakObjCPtr.h>
 #endif
 
 #if PLATFORM(IOS_FAMILY) && ENABLE(MODEL_PROCESS)
