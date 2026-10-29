@@ -16,8 +16,8 @@ into how many workers fit on a CI host and how fast each capture completes.
 
 | Commit / path | What |
 | --- | --- |
-| `4d05d732e5a` | Upstream base. Exactly Playwright v1.63.0's `BASE_REVISION` (`UPSTREAM_CONFIG.sh`), i.e. the WebKit that playwright-core 1.63 (Magpie's pinned version) expects — build `webkit-2359`. |
-| "Apply Playwright v1.63.0 WebKit patches" | `browser_patches/webkit/patches/bootstrap.diff` applied verbatim + `embedder/Playwright` → `Tools/Playwright`. Defines the remote protocol playwright-core speaks. **Don't touch the protocol.** |
+| `5b391e6d3b1` | Upstream base (WebKit 626.1.4, 2026-08-20). The `BASE_REVISION` of the `browser_patches/webkit` sync that matches the shipped `webkit-2359` bundle (626.1.6) — **not** the one at the `v1.63.0` tag, which still points at the June base and lacks the `Page.Setting` values playwright-core 1.63 sends on every page (`PushAPIEnabled`, …). The inspector protocol generated from this pair is identical to the bundle's `protocol.json`. |
+| "Apply Playwright WebKit patches matching playwright-core 1.63" | `browser_patches/webkit/patches/bootstrap.diff` from `microsoft/playwright@e99c0b1d97` applied verbatim + `embedder/Playwright` → `Tools/Playwright`. Defines the remote protocol playwright-core speaks. **Don't touch the protocol.** |
 | `Tools/Playwright/magpie-lean.cmake` | The cut list, with a rationale per cut. Used as a CMake initial-cache file. |
 | `Tools/Scripts/build-magpie-webkit` | One-shot build: `build-webkit --release --cmake --port=Mac` with the lean cache. |
 | `Tools/Playwright/mac/CMakeLists.txt` | Builds `Playwright.app` in the CMake Mac port (modelled on `Tools/MiniBrowser/mac`) and emits `pw_run.sh`. |
@@ -87,19 +87,23 @@ Playwright patch references in `#if ENABLE(...)` stays (`REMOTE_INSPECTOR`, `TOU
 `GEOLOCATION`).
 
 Compiled out: WebRTC (+libwebrtc.dylib), MediaStream/capture (+ScreenCaptureKit), MediaRecorder,
-WebCodecs, MSE, EME (both), MediaSession(+coordinator), PiP, video presentation mode, Web Audio,
-WebGL (+ANGLE), WebGPU (+framework/Swift interop), WebXR, `<model>`, Apple Pay (+all PASSKIT_*
-derived flags, `USE(PASSKIT)`), Payment Request, WebAuthn, Gamepad, Speech Synthesis, Writing
-Tools, WebExtensions, content blockers, content filtering, telephone number detection, Services
-menu, pointer lock, cursor scale/visibility, all PDF plugins, MHTML, inspector extensions/telemetry,
-memory sampler, resource usage overlay, Web API statistics, Live Text (IMAGE_ANALYSIS*), Web Push
-(+declarative), VP9/Vorbis/Opus codec registration, API tests, layout-test runners, `jsc` shell.
+WebCodecs, MSE (+Cocoa WebM player), EME (both), MediaSession(+coordinator/playlist), PiP, video
+presentation mode, Web Audio, WebGL (+ANGLE), WebGPU (+framework/Swift interop), WebXR, `<model>`,
+Apple Pay (+all PASSKIT_*-derived flags, `USE(PASSKIT)`), Payment Request, WebAuthn, Gamepad, Speech
+Synthesis, Writing Tools, WebExtensions (+WebDriver extension commands), pointer lock, cursor
+scale/visibility, PDF.js, MHTML, inspector extensions/telemetry, memory sampler, resource usage
+overlay, Web API statistics, Live Text (IMAGE_ANALYSIS*), Web Push (+declarative), VP9/Vorbis/Opus
+codec registration, the Swift back/forward-list prototype, API tests, layout-test runners, `jsc`.
 
 Kept on because macOS-only code assumes them unconditionally (each would need real refactoring
-upstream to be optional): `WIRELESS_PLAYBACK_TARGET` (PAL `AVOutputContext` shim),
-`ACCESSIBILITY_ISOLATED_TREE` (AXObjectCacheMac), `ATTACHMENT_ELEMENT` (Cocoa editing/drag),
-`DATA_DETECTION` (ImageOverlayControllerMac), `DATACUE_VALUE`/`AVF_CAPTIONS`,
-`APPLICATION_MANIFEST`.
+upstream to be optional — see the "round N" commits for the exact sites):
+`WIRELESS_PLAYBACK_TARGET` (PAL `AVOutputContext` shim), `ACCESSIBILITY_ISOLATED_TREE`
+(AXObjectCacheMac), `ATTACHMENT_ELEMENT` (Cocoa editing/drag), `DATA_DETECTION`
+(ImageOverlayControllerMac), `TELEPHONE_NUMBER_DETECTION` + `SERVICE_CONTROLS`
+(ServicesOverlayController, WebContextMenuProxyMac), `CONTENT_EXTENSIONS` + `CONTENT_FILTERING`
+(WKContentRuleListStore, WebPrivacyHelpers, downloads), the PDF stack (`PDF_PLUGIN`/`UNIFIED_PDF`/
+`PDF_HUD`/`PDFKIT_PLUGIN`: WebViewImpl + AppKit gestures; PDFKit is soft-linked),
+`DATACUE_VALUE`/`AVF_CAPTIONS`, `APPLICATION_MANIFEST`.
 
 ### Parent→child pins (`OptionsCocoa.cmake`)
 
@@ -109,7 +113,9 @@ on without checking their parent (e.g. `ENABLE_COCOA_WEBM_PLAYER` without `MEDIA
 `cmakeconfig.h` is included before `<wtf/Platform.h>`, so `OptionsCocoa.cmake` exposes those
 children as `0` whenever the parent CMake option is off. Three `Platform*.h` defines had to be
 wrapped in `#if !defined(...)` to make that possible (`HAVE_SCREEN_CAPTURE_KIT`,
-`HAVE_WEBGPU_IMPLEMENTATION`, `USE_PASSKIT`). `WEBKIT_PLATFORM_FEATURES_FORCE_OFF` does the same
+`HAVE_WEBGPU_IMPLEMENTATION`, `USE_PASSKIT`). Toolchain note: the open-source Swift 6.3 toolchain
+only pretends to support `-emit-clang-header-min-access`, so `SWIFT_CXX_INTEROP_SUPPORTED` is pinned
+off in the lean cache. `WEBKIT_PLATFORM_FEATURES_FORCE_OFF` does the same
 for features with no CMake option at all.
 
 ## Candidates for the next round (measure first)
