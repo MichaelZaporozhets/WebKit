@@ -165,8 +165,14 @@ WEBKIT_OPTION_END()
 set(SWIFT_REQUIRED ON)
 
 # Configure module building
+# -explicit-module-build hits "module dependency cycle: _DarwinFoundation3.swiftmodule ->
+# CxxStdlib.swiftinterface -> _DarwinFoundation3.swiftmodule" with the open-source Swift 6.3
+# toolchain against the Xcode 26.3 SDK; let a configuration opt out.
+option(WEBKIT_SWIFT_EXPLICIT_MODULE_BUILD "Build Swift modules with -explicit-module-build" ON)
+if (WEBKIT_SWIFT_EXPLICIT_MODULE_BUILD)
+    add_compile_options("$<$<COMPILE_LANGUAGE:Swift>:-explicit-module-build>")
+endif ()
 add_compile_options(
-    "$<$<COMPILE_LANGUAGE:Swift>:-explicit-module-build>"
     # Needed for compatibility with modules in the (internal) SDK:
     # https://bugs.webkit.org/show_bug.cgi?id=312083
     "$<$<COMPILE_LANGUAGE:Swift>:SHELL:-Xcc -fexperimental-bounds-safety-attributes>"
@@ -242,10 +248,38 @@ if (NOT ENABLE_APPLE_PAY)
     # PassKit soft-linking (PAL) and the PK* IPC coders are gated on USE(PASSKIT), which
     # PlatformUse.h turns on per platform regardless of ENABLE(APPLE_PAY).
     SET_AND_EXPOSE_TO_BUILD(USE_PASSKIT OFF)
-    # These derive from HAVE(PASSKIT_*) / PLATFORM(), not from ENABLE(APPLE_PAY).
-    foreach (_ap_feature AMS_UI SETUP SESSION_V11 REMOTE_UI NEW_BUTTON_TYPES LATER
-             DELEGATED_REQUEST UPDATE_SHIPPING_METHODS_WHEN_CHANGING_LINE_ITEMS)
-        SET_AND_EXPOSE_TO_BUILD(ENABLE_APPLE_PAY_${_ap_feature} OFF)
+    # Every ENABLE_APPLE_PAY_* sub-feature derives from HAVE(PASSKIT_*) / PLATFORM(), not from
+    # ENABLE(APPLE_PAY), and they are Platform.h-owned (not CMake options) on this port, so the
+    # IDL/serializer generators would otherwise still see them as on.
+    foreach (_ap_feature
+        ENABLE_APPLE_PAY_AMS_UI
+        ENABLE_APPLE_PAY_AUTOMATIC_RELOAD_LINE_ITEM
+        ENABLE_APPLE_PAY_AUTOMATIC_RELOAD_PAYMENTS
+        ENABLE_APPLE_PAY_COUPON_CODE
+        ENABLE_APPLE_PAY_DEFERRED_LINE_ITEM
+        ENABLE_APPLE_PAY_DEFERRED_PAYMENTS
+        ENABLE_APPLE_PAY_DELEGATED_REQUEST
+        ENABLE_APPLE_PAY_DISBURSEMENTS
+        ENABLE_APPLE_PAY_FEATURES
+        ENABLE_APPLE_PAY_INSTALLMENTS
+        ENABLE_APPLE_PAY_LATER
+        ENABLE_APPLE_PAY_LATER_AVAILABILITY
+        ENABLE_APPLE_PAY_MERCHANT_CATEGORY_CODE
+        ENABLE_APPLE_PAY_MULTI_MERCHANT_PAYMENTS
+        ENABLE_APPLE_PAY_NEW_BUTTON_TYPES
+        ENABLE_APPLE_PAY_PAYMENT_ORDER_DETAILS
+        ENABLE_APPLE_PAY_RECURRING_LINE_ITEM
+        ENABLE_APPLE_PAY_RECURRING_PAYMENTS
+        ENABLE_APPLE_PAY_REMOTE_UI
+        ENABLE_APPLE_PAY_REMOTE_UI_USES_SCENE
+        ENABLE_APPLE_PAY_SELECTED_SHIPPING_METHOD
+        ENABLE_APPLE_PAY_SESSION_V11
+        ENABLE_APPLE_PAY_SETUP
+        ENABLE_APPLE_PAY_SHIPPING_CONTACT_EDITING_MODE
+        ENABLE_APPLE_PAY_SHIPPING_METHOD_DATE_COMPONENTS_RANGE
+        ENABLE_APPLE_PAY_UPDATE_SHIPPING_METHODS_WHEN_CHANGING_LINE_ITEMS
+    )
+        SET_AND_EXPOSE_TO_BUILD(${_ap_feature} OFF)
     endforeach ()
     unset(_ap_feature)
 endif ()

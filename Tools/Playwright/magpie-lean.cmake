@@ -62,14 +62,7 @@ set(ENABLE_WEBXR OFF CACHE BOOL "" FORCE)
 set(ENABLE_MODEL_ELEMENT OFF CACHE BOOL "" FORCE)        # <model>, RealityKit, Model XPC service
 
 # --- Platform integrations nobody can click in headless CI.
-set(ENABLE_APPLE_PAY OFF CACHE BOOL "" FORCE)
-foreach (_ap_feature
-    AUTOMATIC_RELOAD_LINE_ITEM AUTOMATIC_RELOAD_PAYMENTS COUPON_CODE DEFERRED_LINE_ITEM
-    DEFERRED_PAYMENTS DISBURSEMENTS INSTALLMENTS LATER_AVAILABILITY MERCHANT_CATEGORY_CODE
-    MULTI_MERCHANT_PAYMENTS PAYMENT_ORDER_DETAILS RECURRING_LINE_ITEM RECURRING_PAYMENTS
-    SELECTED_SHIPPING_METHOD SHIPPING_CONTACT_EDITING_MODE SHIPPING_METHOD_DATE_COMPONENTS_RANGE)
-    set(ENABLE_APPLE_PAY_${_ap_feature} OFF CACHE BOOL "" FORCE)   # OptionsMac.cmake defaults these ON
-endforeach ()
+set(ENABLE_APPLE_PAY OFF CACHE BOOL "" FORCE)             # OptionsCocoa.cmake pins every ENABLE_APPLE_PAY_* with it
 set(ENABLE_PAYMENT_REQUEST OFF CACHE BOOL "" FORCE)
 set(ENABLE_WEB_AUTHN OFF CACHE BOOL "" FORCE)
 set(ENABLE_GAMEPAD OFF CACHE BOOL "" FORCE)
@@ -149,3 +142,5 @@ set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF
 # under -typecheck (so WebKit's probe says "supported") but rejects it when emitting modules.
 # Apple's Xcode 26.4 Swift has it for real; until the build uses that, pin the probe result.
 set(SWIFT_CXX_INTEROP_SUPPORTED FALSE CACHE INTERNAL "pinned by magpie-lean.cmake (see comment)")
+# Same toolchain: -explicit-module-build fails with a _DarwinFoundation3 <-> CxxStdlib module cycle.
+set(WEBKIT_SWIFT_EXPLICIT_MODULE_BUILD OFF CACHE BOOL "" FORCE)
