@@ -48,7 +48,16 @@ if (SWIFT_REQUIRED)
     endif ()
 
     if (APPLE)
-        WEBKIT_XCRUN(CMAKE_Swift_COMPILER --find swiftc)
+        # The compiler that actually runs is the SDK toolchain's swiftc, not whatever
+        # CMAKE_Swift_COMPILER said at configure time. WEBKIT_SWIFT_COMPILER_OVERRIDE lets a
+        # build use a different toolchain's swiftc (e.g. the Command Line Tools' newer one
+        # when the installed Xcode's Swift is too old for this tree).
+        set(WEBKIT_SWIFT_COMPILER_OVERRIDE "" CACHE FILEPATH "swiftc to use instead of the SDK toolchain's")
+        if (WEBKIT_SWIFT_COMPILER_OVERRIDE)
+            set(CMAKE_Swift_COMPILER "${WEBKIT_SWIFT_COMPILER_OVERRIDE}")
+        else ()
+            WEBKIT_XCRUN(CMAKE_Swift_COMPILER --find swiftc)
+        endif ()
     endif ()
     set(ORIGINAL_Swift_COMPILER "${CMAKE_Swift_COMPILER}")
 

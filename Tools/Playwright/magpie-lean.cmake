@@ -137,3 +137,12 @@ set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF
 #   ENABLE_VIDEO, ENABLE_WEBASSEMBLY, ENABLE_FTL_JIT, ENABLE_GPU_PROCESS, ENABLE_WEBKIT_LEGACY,
 #   ENABLE_NOTIFICATIONS, ENABLE_GEOLOCATION, ENABLE_FULLSCREEN_API, ENABLE_DRAG_SUPPORT,
 #   ENABLE_CONTEXT_MENUS, ENABLE_TEXT_AUTOSIZING, ENABLE_MATHML, ENABLE_XSLT, service workers.
+
+# --- Toolchain. Xcode 26.3 bundles Swift 6.2.4, which lacks -emit-clang-header-min-access and
+# cannot build the WebKit_Internal clang module this tree's Swift needs; the Command Line Tools
+# ship Swift 6.3.3. WebKit resolves the real swiftc through xcrun regardless of
+# CMAKE_Swift_COMPILER, so route both through the override (see top-level CMakeLists.txt).
+if (EXISTS "/Library/Developer/CommandLineTools/usr/bin/swiftc" AND NOT WEBKIT_SWIFT_COMPILER_OVERRIDE)
+    set(WEBKIT_SWIFT_COMPILER_OVERRIDE "/Library/Developer/CommandLineTools/usr/bin/swiftc" CACHE FILEPATH "" FORCE)
+    set(CMAKE_Swift_COMPILER "/Library/Developer/CommandLineTools/usr/bin/swiftc" CACHE FILEPATH "" FORCE)
+endif ()
