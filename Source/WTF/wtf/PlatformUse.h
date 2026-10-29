@@ -103,7 +103,7 @@
 #define USE_APPKIT 1
 #endif
 
-#if PLATFORM(MAC) || PLATFORM(IOS) || PLATFORM(VISION)
+#if (PLATFORM(MAC) || PLATFORM(IOS) || PLATFORM(VISION)) && !defined(USE_PASSKIT)
 #define USE_PASSKIT 1
 #endif
 

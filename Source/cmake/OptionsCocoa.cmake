@@ -239,6 +239,9 @@ if (NOT ENABLE_WEBGPU)
     SET_AND_EXPOSE_TO_BUILD(HAVE_WEBGPU_IMPLEMENTATION OFF)
 endif ()
 if (NOT ENABLE_APPLE_PAY)
+    # PassKit soft-linking (PAL) and the PK* IPC coders are gated on USE(PASSKIT), which
+    # PlatformUse.h turns on per platform regardless of ENABLE(APPLE_PAY).
+    SET_AND_EXPOSE_TO_BUILD(USE_PASSKIT OFF)
     # These derive from HAVE(PASSKIT_*) / PLATFORM(), not from ENABLE(APPLE_PAY).
     foreach (_ap_feature AMS_UI SETUP SESSION_V11 REMOTE_UI NEW_BUTTON_TYPES LATER
              DELEGATED_REQUEST UPDATE_SHIPPING_METHODS_WHEN_CHANGING_LINE_ITEMS)

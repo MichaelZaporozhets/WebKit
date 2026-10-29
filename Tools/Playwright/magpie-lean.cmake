@@ -83,7 +83,7 @@ set(ENABLE_TELEPHONE_NUMBER_DETECTION OFF CACHE BOOL "" FORCE)
 # ATTACHMENT_ELEMENT stays ON: Cocoa editing/drag/paste code assumes it (DragDataCocoa,
 # EditingHTMLConverter, WebContentReaderCocoa, RenderThemeCocoa).
 set(ENABLE_ATTACHMENT_ELEMENT ON CACHE BOOL "" FORCE)
-set(ENABLE_APPLICATION_MANIFEST OFF CACHE BOOL "" FORCE)
+set(ENABLE_APPLICATION_MANIFEST ON CACHE BOOL "" FORCE)    # tiny; _WKApplicationManifest.mm is compiled unconditionally on Cocoa
 set(ENABLE_SERVICE_CONTROLS OFF CACHE BOOL "" FORCE)     # macOS Services menu
 set(ENABLE_POINTER_LOCK OFF CACHE BOOL "" FORCE)
 set(ENABLE_MOUSE_CURSOR_SCALE OFF CACHE BOOL "" FORCE)
