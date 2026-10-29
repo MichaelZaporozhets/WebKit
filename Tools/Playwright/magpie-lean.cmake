@@ -131,6 +131,8 @@ set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF
     ENABLE_OPUS
     ENABLE_FEATURE_DEFAULT_VALIDATION           # build-time assert that "mature" prefs default on; SpeechRecognitionEnabled
                                                 # legitimately defaults off without MEDIA_STREAM
+    HAVE_WEBTRANSPORT                           # gated on deployment target >= 26.4, but the 26.2 SDK in Xcode 26.3 has no
+                                                # nw_webtransport_* symbols; nothing in a VRT render uses WebTransport
     CACHE STRING "" FORCE)
 
 # --- Deliberately KEPT (candidates for a later, measured round; see docs/magpie-lean.md):
