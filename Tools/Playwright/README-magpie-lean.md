@@ -64,6 +64,12 @@ node bench.mjs --label lean --executable ../../../WebKitBuild/cmake-mac/Release/
 node compare.mjs stock lean                            # timings, RSS, pixelmatch of the screenshots
 ```
 
+Runtime defaults baked into `pw_run.sh` (override by exporting the variable yourself):
+`MAGPIE_SHARED_PROCESS_POOL=1` (contexts share one WebContent process pool; storage stays
+per-context) and `MAGPIE_WEBKIT_POOL=prewarmsProcessesAutomatically=1`. Caveat: Playwright's
+per-context geolocation/language overrides are per-pool and become shared across live contexts;
+set `MAGPIE_SHARED_PROCESS_POOL=0` if a tenant relies on them.
+
 Runtime experiments without rebuilding (both default pool and per-context pools):
 
 ```sh
@@ -75,6 +81,30 @@ node bench.mjs --label lean-nogpu --executable ../../../WebKitBuild/cmake-mac/Re
 Keys are WebKit preference names (`Source/WTF/Scripts/Preferences/UnifiedWebPreferences.yaml`,
 matched via `[WKPreferences _features]`), or `_`-prefixed `WKPreferencesPrivate` /
 `_WKProcessPoolConfiguration` properties applied with KVC.
+
+## Results (M4 Pro, macOS 26.6, playwright-core 1.63 / stock webkit-2359 vs this build, bench fixture = 60-row Polaris IndexTable page)
+
+| | stock | lean | |
+| --- | --- | --- | --- |
+| Binaries (WebCore / WebKit / JSC) | 104 / 61 / 42 MB + libwebrtc 16 MB + ANGLE 6 MB + WebGPU 4 MB | 78 / 39 / 39 MB | −32% total |
+| Cold launch → first page, p50 of 6 | 431 ms | 375 ms | −13% |
+| RSS after launch | 314 MB | 232 MB (261 MB with the prewarmed process) | −26% / −17% |
+| Capture (context+page, load, settle, screenshot) desktop 1920×1080 p50 | 442 ms | 308 ms | −30% |
+| Capture tablet (iPad gen 7) p50 | 346 ms | 211 ms | −39% |
+| Capture mobile (iPhone 14) p50 | 369 ms | 244 ms | −34% |
+| Capture p95 (desktop / tablet / mobile) | 500 / 416 / 388 ms | 396 / 288 / 294 ms | −21% / −31% / −24% |
+| RSS per capture | 385 MB | 322 MB (368 MB with shared pool) | −16% / −5% |
+| Screenshots vs stock (pixelmatch, 3 viewports) | — | 0 differing pixels | identical |
+
+Where the capture time goes now: ~35 ms context+page (was ~150: cold WebContent spawn per
+Playwright context, fixed by the shared prewarmed pool), ~90–120 ms first layout/paint + fonts
+(page-dependent), ~60–130 ms screenshot of which ~90 ms is the software repaint `Page.snapshotRect`
+does (PNG encoding is only ~10 ms more than JPEG). The repaint is inherent to the capture method
+stock uses; switching to a compositor snapshot would change pixels and invalidate Magpie's baselines.
+
+Memory-vs-speed knob measured but left off: `MAGPIE_WEBKIT_PREFS="UseGPUProcessForDOMRenderingEnabled=0;UseGPUProcessForCanvasRenderingEnabled=0;UseGPUProcessForMediaEnabled=0"`
+never launches the GPU process (−33% RSS at launch, −27% per capture vs stock) but captures are
+~9% slower and the 4-wide parallel case ~20% slower.
 
 ## The cuts
 
