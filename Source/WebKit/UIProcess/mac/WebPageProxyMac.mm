@@ -641,6 +641,7 @@ static RetainPtr<NSString> pathToPDFOnDisk(const String& suggestedFilename)
     return path;
 }
 
+#if ENABLE(PDF_PLUGIN)
 void WebPageProxy::savePDFToTemporaryFolderAndOpenWithNativeApplication(const String& suggestedFilename, FrameInfoData&& frameInfo, std::span<const uint8_t> data)
 {
     if (data.empty()) {
@@ -688,6 +689,7 @@ void WebPageProxy::savePDFToTemporaryFolderAndOpenWithNativeApplication(const St
         [[NSWorkspace sharedWorkspace] openURL:pdfFileURL.createNSURL().get()];
     });
 }
+#endif // ENABLE(PDF_PLUGIN)
 
 #if ENABLE(PDF_PLUGIN)
 void WebPageProxy::showPDFContextMenu(const WebKit::PDFContextMenu& contextMenu, PDFPluginIdentifier identifier, WebCore::FrameIdentifier frameID, CompletionHandler<void(std::optional<int32_t>&&)>&& completionHandler)

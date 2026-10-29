@@ -77,9 +77,12 @@ set(ENABLE_GAMEPAD OFF CACHE BOOL "" FORCE)
 set(ENABLE_SPEECH_SYNTHESIS OFF CACHE BOOL "" FORCE)
 set(ENABLE_WRITING_TOOLS OFF CACHE BOOL "" FORCE)
 set(ENABLE_WK_WEB_EXTENSIONS OFF CACHE BOOL "" FORCE)    # browser-extension API surface in UIProcess + WebProcess
-set(ENABLE_CONTENT_EXTENSIONS OFF CACHE BOOL "" FORCE)   # content blockers (Playwright routes via Network agent, not rule lists)
-set(ENABLE_CONTENT_FILTERING OFF CACHE BOOL "" FORCE)    # parental controls
-set(ENABLE_TELEPHONE_NUMBER_DETECTION OFF CACHE BOOL "" FORCE)
+# CONTENT_EXTENSIONS / CONTENT_FILTERING stay ON: the Cocoa API layer (WKContentRuleListStore,
+# WebPrivacyHelpers' resource monitor, PendingDownload's WebContentRestrictions path) assumes them.
+set(ENABLE_CONTENT_EXTENSIONS ON CACHE BOOL "" FORCE)
+set(ENABLE_CONTENT_FILTERING ON CACHE BOOL "" FORCE)
+# TELEPHONE_NUMBER_DETECTION stays ON: ServicesOverlayController/WebContextMenuProxyMac (SERVICE_CONTROLS) assume it.
+set(ENABLE_TELEPHONE_NUMBER_DETECTION ON CACHE BOOL "" FORCE)
 # ATTACHMENT_ELEMENT stays ON: Cocoa editing/drag/paste code assumes it (DragDataCocoa,
 # EditingHTMLConverter, WebContentReaderCocoa, RenderThemeCocoa).
 set(ENABLE_ATTACHMENT_ELEMENT ON CACHE BOOL "" FORCE)
@@ -115,6 +118,9 @@ set(ENABLE_JAVASCRIPT_SHELL OFF CACHE BOOL "" FORCE)
 set(ENABLE_MINIBROWSER ON CACHE BOOL "" FORCE)           # cheap, and handy for eyeballing a page outside Playwright
 set(ENABLE_PLAYWRIGHT ON CACHE BOOL "" FORCE)
 set(ENABLE_EXPERIMENTAL_FEATURES OFF CACHE BOOL "" FORCE)
+# Swift/C++-interop prototype of the back/forward list; the C++ one is what ships. Also the
+# only WebKit Swift source that needs Apple-toolchain-only features (@used, min-access headers).
+set(ENABLE_BACK_FORWARD_LIST_SWIFT OFF CACHE BOOL "" FORCE)
 
 # --- Platform.h-owned features (no CMake option). Pinned to 0 through
 # WEBKIT_PLATFORM_FEATURES_FORCE_OFF (Source/cmake/OptionsCocoa.cmake -> cmakeconfig.h).

@@ -431,6 +431,7 @@ void PageClientImpl::registerInsertionUndoGrouping()
     registerInsertionUndoGroupingWithUndoManager(retainPtr([m_view.get() undoManager]).get());
 }
 
+#if ENABLE(PDF_HUD)
 void PageClientImpl::createPDFHUD(PDFPluginIdentifier identifier, WebCore::FrameIdentifier frameID, const WebCore::IntRect& rect)
 {
     protect(m_impl)->createPDFHUD(identifier, frameID, rect);
@@ -464,6 +465,7 @@ void PageClientImpl::showPDFHUD(PDFPluginIdentifier identifier)
 {
     protect(m_impl)->showPDFHUD(identifier);
 }
+#endif // ENABLE(PDF_HUD)
 
 void PageClientImpl::clearAllEditCommands()
 {

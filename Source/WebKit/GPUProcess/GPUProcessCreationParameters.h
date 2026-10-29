@@ -50,8 +50,10 @@ struct GPUProcessCreationParameters {
     bool useMockCaptureDevices { false };
 #if PLATFORM(MAC)
     SandboxExtension::Handle microphoneSandboxExtensionHandle;
-    SandboxExtension::Handle launchServicesExtensionHandle;
 #endif
+#endif
+#if PLATFORM(MAC)
+    SandboxExtension::Handle launchServicesExtensionHandle;
 #endif
 
 #if USE(SANDBOX_EXTENSIONS_FOR_CACHE_AND_TEMP_DIRECTORY_ACCESS)

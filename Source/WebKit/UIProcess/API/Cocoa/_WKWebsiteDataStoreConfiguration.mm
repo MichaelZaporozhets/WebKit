@@ -676,6 +676,7 @@ static WebKit::UnifiedOriginStorageLevel NODELETE toUnifiedOriginStorageLevel(_W
     _configuration->setVolumeCapacityOverride(capacity);
 }
 
+#if ENABLE(CONTENT_EXTENSIONS)
 - (NSURL *)_resourceMonitorThrottlerDirectory
 {
     return [NSURL fileURLWithPath:_configuration->resourceMonitorThrottlerDirectory().createNSString().get() isDirectory:YES];
@@ -692,6 +693,7 @@ static WebKit::UnifiedOriginStorageLevel NODELETE toUnifiedOriginStorageLevel(_W
     checkURLArgument(url);
     protect(_configuration.get())->setResourceMonitorThrottlerDirectory(url.path);
 }
+#endif // ENABLE(CONTENT_EXTENSIONS)
 
 - (NSURL *)webContentRestrictionsConfigurationURL
 {

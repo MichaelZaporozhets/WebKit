@@ -925,7 +925,7 @@
             "name": "loadWebExtension",
             "description": "Loads a web extension in the automation session.",
             "platform": "macos",
-            "condition": "defined(WTF_PLATFORM_MAC) && WTF_PLATFORM_MAC",
+            "condition": "defined(WTF_PLATFORM_MAC) && WTF_PLATFORM_MAC && defined(ENABLE_WK_WEB_EXTENSIONS_IN_WEBDRIVER) && ENABLE_WK_WEB_EXTENSIONS_IN_WEBDRIVER",
             "parameters": [
                 { "name": "type", "$ref": "WebExtensionResourceOptions", "optional": false, "description": "A hint for the resource format used to load the extension." },
                 { "name": "value", "type": "string", "description": "One of the following: the path to the extension, the path to the extension's archive, or the base 64 encoded data of the extension's archive." }
