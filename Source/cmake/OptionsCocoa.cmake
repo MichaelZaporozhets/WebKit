@@ -222,6 +222,45 @@ endif ()
 set(ENABLE_WEBKIT_LEGACY ON)
 set(ENABLE_WEBKIT ON)
 
+# Platform.h-owned features whose Cocoa defaults (PlatformEnableCocoa.h) assume their parent
+# feature is on. cmakeconfig.h is included ahead of <wtf/Platform.h>, so defining them here
+# keeps the "#if !defined(...)" defaults from re-enabling them when the parent CMake option is off.
+if (NOT ENABLE_MEDIA_SOURCE)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_COCOA_WEBM_PLAYER OFF)   # PlatformEnable.h #errors otherwise
+endif ()
+if (NOT ENABLE_WEBGL)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_WEBGL_IN_WORKERS OFF)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_GPU_PROCESS_WEBGL_BY_DEFAULT OFF)
+endif ()
+if (NOT ENABLE_WEBGPU)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_HDR_FOR_WEBGPU OFF)
+endif ()
+if (NOT ENABLE_MODEL_ELEMENT)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_MODEL_ELEMENT_ACCESSIBILITY OFF)
+endif ()
+if (NOT ENABLE_WRITING_TOOLS)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_TOP_LEVEL_WRITING_TOOLS_CONTEXT_MENU_ITEMS OFF)
+endif ()
+if (NOT ENABLE_PDF_PLUGIN)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_UNIFIED_PDF_BY_DEFAULT OFF)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_LEGACY_PDFKIT_PLUGIN OFF)
+endif ()
+if (NOT ENABLE_MEDIA_STREAM)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_MEDIA_CAPTURE OFF)
+endif ()
+if (NOT ENABLE_MEDIA_SESSION)
+    SET_AND_EXPOSE_TO_BUILD(ENABLE_MEDIA_SESSION_PLAYLIST OFF)
+endif ()
+
+# Escape hatch for Platform.h-owned features that have no CMake option: a configuration can
+# list ENABLE_*/HAVE_*/USE_* names here to pin them to 0 in cmakeconfig.h.
+# (Tools/Playwright/magpie-lean.cmake uses this.)
+set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF "" CACHE STRING "Platform.h-owned feature macros to force to 0")
+foreach (_feature IN LISTS WEBKIT_PLATFORM_FEATURES_FORCE_OFF)
+    SET_AND_EXPOSE_TO_BUILD(${_feature} OFF)
+endforeach ()
+unset(_feature)
+
 # OBJECT libraries don't produce .swiftmodule files.
 set(PAL_LIBRARY_TYPE STATIC)
 

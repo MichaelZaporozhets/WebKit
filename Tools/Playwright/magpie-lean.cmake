@@ -22,10 +22,12 @@
 # and a shorter build). Runtime cuts live in Tools/Playwright/mac/AppDelegate.m.
 
 # --- What Playwright's own Mac build passes to build-webkit (--touch-events --orientation-events).
-# ORIENTATION_EVENTS is owned by PlatformEnable.h (the patch flips its default to 1);
-# TOUCH_EVENTS is a CMake option on Mac, so cmakeconfig.h would otherwise force it to 0.
+# Both are CMake options on this revision (default OFF), so cmakeconfig.h would otherwise
+# override the defaults the Playwright patch flips in PlatformEnable.h.
 set(ENABLE_TOUCH_EVENTS ON CACHE BOOL "" FORCE)
+set(ENABLE_ORIENTATION_EVENTS ON CACHE BOOL "" FORCE)
 set(ENABLE_IOS_TOUCH_EVENTS OFF CACHE BOOL "" FORCE)
+set(ENABLE_DEVICE_ORIENTATION OFF CACHE BOOL "" FORCE)    # iOS-only in Safari too
 
 # --- Realtime media / capture / codecs: nothing in a VRT render uses a camera, mic, peer
 # connection, MSE buffer, DRM session, or encoder.
@@ -58,6 +60,13 @@ set(ENABLE_MODEL_ELEMENT OFF CACHE BOOL "" FORCE)        # <model>, RealityKit, 
 
 # --- Platform integrations nobody can click in headless CI.
 set(ENABLE_APPLE_PAY OFF CACHE BOOL "" FORCE)
+foreach (_ap_feature
+    AUTOMATIC_RELOAD_LINE_ITEM AUTOMATIC_RELOAD_PAYMENTS COUPON_CODE DEFERRED_LINE_ITEM
+    DEFERRED_PAYMENTS DISBURSEMENTS INSTALLMENTS LATER_AVAILABILITY MERCHANT_CATEGORY_CODE
+    MULTI_MERCHANT_PAYMENTS PAYMENT_ORDER_DETAILS RECURRING_LINE_ITEM RECURRING_PAYMENTS
+    SELECTED_SHIPPING_METHOD SHIPPING_CONTACT_EDITING_MODE SHIPPING_METHOD_DATE_COMPONENTS_RANGE)
+    set(ENABLE_APPLE_PAY_${_ap_feature} OFF CACHE BOOL "" FORCE)   # OptionsMac.cmake defaults these ON
+endforeach ()
 set(ENABLE_PAYMENT_REQUEST OFF CACHE BOOL "" FORCE)
 set(ENABLE_WEB_AUTHN OFF CACHE BOOL "" FORCE)
 set(ENABLE_GAMEPAD OFF CACHE BOOL "" FORCE)
@@ -96,6 +105,20 @@ set(ENABLE_JAVASCRIPT_SHELL OFF CACHE BOOL "" FORCE)
 set(ENABLE_MINIBROWSER ON CACHE BOOL "" FORCE)           # cheap, and handy for eyeballing a page outside Playwright
 set(ENABLE_PLAYWRIGHT ON CACHE BOOL "" FORCE)
 set(ENABLE_EXPERIMENTAL_FEATURES OFF CACHE BOOL "" FORCE)
+
+# --- Platform.h-owned features (no CMake option). Pinned to 0 through
+# WEBKIT_PLATFORM_FEATURES_FORCE_OFF (Source/cmake/OptionsCocoa.cmake -> cmakeconfig.h).
+set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF
+    ENABLE_IMAGE_ANALYSIS                       # VisionKit Live Text
+    ENABLE_IMAGE_ANALYSIS_ENHANCEMENTS
+    ENABLE_IMAGE_ANALYSIS_FOR_MACHINE_READABLE_CODES
+    ENABLE_DATA_DETECTION                       # DataDetectors (phone/address/date detection)
+    ENABLE_WEB_PUSH_NOTIFICATIONS               # webpushd / Push API plumbing in Networking
+    ENABLE_DECLARATIVE_WEB_PUSH
+    ENABLE_VP9                                  # media codec registration; nothing plays media here
+    ENABLE_VORBIS
+    ENABLE_OPUS
+    CACHE STRING "" FORCE)
 
 # --- Deliberately KEPT (candidates for a later, measured round; see docs/magpie-lean.md):
 #   ENABLE_VIDEO, ENABLE_WEBASSEMBLY, ENABLE_FTL_JIT, ENABLE_GPU_PROCESS, ENABLE_WEBKIT_LEGACY,

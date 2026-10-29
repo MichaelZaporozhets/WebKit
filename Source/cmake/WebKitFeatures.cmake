@@ -583,6 +583,7 @@ endmacro()
 
 macro(CREATE_CONFIGURATION_HEADER)
     list(SORT _WEBKIT_CONFIG_FILE_VARIABLES)
+    list(REMOVE_DUPLICATES _WEBKIT_CONFIG_FILE_VARIABLES)
     set(_file_contents "#ifndef CMAKECONFIG_H\n")
     set(_file_contents "${_file_contents}#define CMAKECONFIG_H\n\n")
 
