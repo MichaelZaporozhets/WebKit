@@ -53,6 +53,19 @@ export function renderPage({ rows = 60, seed = 42 } = {}) {
 <link rel="stylesheet" href="/polaris.css">
 <style>
   body { margin: 0; background: var(--p-color-bg); color: var(--p-color-text); font-family: var(--p-font-family-sans); }
+  /* The React components set these layout props inline; provide the equivalents for static markup. */
+  .Polaris-Page { padding: var(--p-space-400) var(--p-space-600); }
+  .Polaris-Page-Header__Row { display: flex; justify-content: space-between; align-items: center; gap: var(--p-space-400); margin-bottom: var(--p-space-400); }
+  .Polaris-Page-Header__TitleWrapper { display: flex; align-items: center; gap: var(--p-space-200); }
+  .Polaris-Layout { display: flex; flex-wrap: wrap; gap: var(--p-space-400); align-items: flex-start; }
+  .Polaris-Layout__Section { flex: 2 2 48rem; min-width: 0; }
+  .Polaris-Layout__Section--oneThird { flex: 1 1 20rem; }
+  .Polaris-BlockStack { display: flex; flex-direction: column; gap: var(--pc-block-stack-gap-xs, var(--p-space-200)); }
+  .Polaris-InlineStack { display: flex; flex-wrap: var(--pc-inline-stack-wrap, wrap); gap: var(--pc-inline-stack-gap-xs, var(--p-space-200)); align-items: var(--pc-inline-stack-align-items, center); justify-content: var(--pc-inline-stack-align, flex-start); }
+  .Polaris-Box { padding: var(--pc-box-padding-block-start-xs, 0) var(--pc-box-padding-inline-end-xs, 0) var(--pc-box-padding-block-end-xs, 0) var(--pc-box-padding-inline-start-xs, 0); background: var(--pc-box-background, transparent); border-radius: var(--pc-box-border-radius, 0); }
+  .Polaris-IndexTable__Table { width: 100%; border-collapse: collapse; }
+  .Polaris-IndexTable__TableCell, .Polaris-IndexTable__TableHeading { padding: var(--p-space-200) var(--p-space-300); text-align: left; border-bottom: var(--p-border-width-025) solid var(--p-color-border-secondary); white-space: nowrap; }
+  .Polaris-Tabs { display: flex; gap: var(--p-space-100); list-style: none; margin: 0; padding: var(--p-space-200); }
   .bench-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--p-space-400); }
   @media (max-width: 767px) { .bench-grid { grid-template-columns: 1fr 1fr; } }
 </style>
