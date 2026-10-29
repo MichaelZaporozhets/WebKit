@@ -15,4 +15,5 @@ try {
   log(`screenshot ${png.length} bytes`);
   await browser.close();
   log('closed');
+  process.exit(0);
 } catch (e) { log('ERROR ' + e.message.split('\n').slice(0,6).join(' | ')); process.exit(1); }

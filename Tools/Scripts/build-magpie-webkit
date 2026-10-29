@@ -1,44 +1,179 @@
 #!/bin/bash
-# Build the Magpie-lean, Playwright-compatible WebKit (CMake Mac port).
+# Magpie-lean WebKit: one script from a WebKit checkout to a Playwright-compatible bundle.
 #
-#   Tools/Scripts/build-magpie-webkit            # configure (first time) + build
-#   Tools/Scripts/build-magpie-webkit --reconfigure
+#   Tools/Scripts/build-magpie-webkit [command] [options]
 #
-# Output: WebKitBuild/cmake-mac/Release/{Playwright.app,*.framework,pw_run.sh}
-# Point Magpie at it with:
-#   PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH=$PWD/WebKitBuild/cmake-mac/Release/pw_run.sh
+# Commands (default: all)
+#   bootstrap   From a vanilla upstream checkout: fetch the pinned Playwright browser_patches,
+#               check out their BASE_REVISION on a new branch, apply bootstrap.diff + embedder.
+#               (Not needed on the magpie-lean-webkit branch, where this is already committed;
+#               use it to re-roll onto a newer playwright-core.) Prints the cherry-pick to finish.
+#   build       Configure (CMake Mac port + Tools/Playwright/magpie-lean.cmake) and build.
+#   package     Assemble WebKitBuild/magpie-webkit-<rev>-mac-<arch>.zip in the layout of
+#               Playwright's own webkit-<rev> bundle (Playwright.app, frameworks, pw_run.sh).
+#   verify      Launch the packaged bundle through playwright-core and take a screenshot; with
+#               --bench also run Tools/Playwright/bench against the stock bundle and pixel-diff.
+#   all         build + package + verify.
 #
-# Environment knobs:
-#   MAGPIE_SWIFTC=/path/to/swiftc   Swift compiler. Defaults to ~/swift-6.3-toolchain/usr/bin/swiftc (swift.org
-#                                   6.3 release): Xcode 26.3 bundles Swift 6.2.4, which lacks
-#                                   -emit-clang-header-min-access and cannot build the WebKit_Internal clang
-#                                   module; the Command Line Tools' 6.3.3 ships no Cxx overlay.
-#                                   (see ~/.pi/agent/skills/webkit-contributing/references/build-troubleshooting.md #5)
-#   MAGPIE_LTO=thin|full            add -flto; off by default (link time vs. runtime trade-off, measure first)
-#   MAGPIE_EXTRA_CMAKEARGS="..."    anything else to forward to cmake
+# Options / environment
+#   --reconfigure                   wipe CMakeCache.txt before configuring
+#   --bench                         (verify) full benchmark + parity comparison vs stock webkit
+#   --playwright-commit <sha>       (bootstrap) microsoft/playwright commit whose
+#                                   browser_patches/webkit to use (default: pinned below)
+#   MAGPIE_SWIFTC=/path/to/swiftc   Swift compiler. Default: ~/swift-6.3-toolchain/usr/bin/swiftc
+#                                   (swift.org 6.3). Xcode 26.3's Swift 6.2.4 lacks
+#                                   -emit-clang-header-min-access and cannot build this tree's
+#                                   Swift; the Command Line Tools' 6.3.3 ships no Cxx overlay.
+#   MAGPIE_LTO=thin|full            add -flto (measure first; off by default)
+#   MAGPIE_EXTRA_CMAKEARGS="..."    forwarded to cmake
+#
+# Output: WebKitBuild/cmake-mac/Release/{Playwright.app,*.framework,pw_run.sh}; the zip from
+# `package`. Point Magpie at it with
+#   PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH=<unzipped bundle>/pw_run.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BUILD_DIR="$ROOT/WebKitBuild/cmake-mac/Release"
 LEAN_CACHE="$ROOT/Tools/Playwright/magpie-lean.cmake"
+BENCH_DIR="$ROOT/Tools/Playwright/bench"
 
-if [[ "${1:-}" == "--reconfigure" ]]; then
+# The browser_patches sync that matches playwright-core 1.63 / webkit-2359 (see README-magpie-lean.md).
+PLAYWRIGHT_COMMIT_DEFAULT="e99c0b1d973b546a8ce6d4ccf4e3fa925ce005c2"
+
+log() { printf '\033[1;36m[magpie-webkit]\033[0m %s\n' "$*" >&2; }
+die() { printf '\033[1;31m[magpie-webkit] error:\033[0m %s\n' "$*" >&2; exit 1; }
+
+command=all
+reconfigure=0
+bench=0
+playwright_commit="$PLAYWRIGHT_COMMIT_DEFAULT"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        bootstrap|build|package|verify|all) command="$1" ;;
+        --reconfigure) reconfigure=1 ;;
+        --bench) bench=1 ;;
+        --playwright-commit) playwright_commit="$2"; shift ;;
+        -h|--help) sed -n '2,36p' "$0"; exit 0 ;;
+        *) die "unknown argument: $1" ;;
+    esac
     shift
-    rm -f "$BUILD_DIR/CMakeCache.txt"
-fi
+done
 
-CMAKEARGS="-C $LEAN_CACHE -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF"
-if [[ -z "${MAGPIE_SWIFTC:-}" && -x "$HOME/swift-6.3-toolchain/usr/bin/swiftc" ]]; then
-    MAGPIE_SWIFTC="$HOME/swift-6.3-toolchain/usr/bin/swiftc"
-fi
-# WEBKIT_SWIFT_COMPILER_OVERRIDE is what WebKit actually honours on Apple (CMAKE_Swift_COMPILER
-# gets re-resolved through xcrun); set both.
-[[ -n "${MAGPIE_SWIFTC:-}" ]] && CMAKEARGS="$CMAKEARGS -DCMAKE_Swift_COMPILER=$MAGPIE_SWIFTC -DWEBKIT_SWIFT_COMPILER_OVERRIDE=$MAGPIE_SWIFTC"
-[[ -n "${MAGPIE_LTO:-}" ]] && CMAKEARGS="$CMAKEARGS -DLTO_MODE=$MAGPIE_LTO"
-[[ -n "${MAGPIE_EXTRA_CMAKEARGS:-}" ]] && CMAKEARGS="$CMAKEARGS $MAGPIE_EXTRA_CMAKEARGS"
+# ----------------------------------------------------------------------------------------------
+bootstrap() {
+    cd "$ROOT"
+    local tmp; tmp="$(mktemp -d)"
+    log "fetching microsoft/playwright@$playwright_commit browser_patches/webkit"
+    git clone -q --depth 1 --filter=blob:none --sparse https://github.com/microsoft/playwright "$tmp/pw"
+    git -C "$tmp/pw" fetch -q --depth 1 origin "$playwright_commit"
+    git -C "$tmp/pw" checkout -q "$playwright_commit"
+    git -C "$tmp/pw" sparse-checkout set browser_patches/webkit >/dev/null
+    local patches="$tmp/pw/browser_patches/webkit"
+    # shellcheck disable=SC1091
+    source "$patches/UPSTREAM_CONFIG.sh"   # REMOTE_URL, BASE_BRANCH, BASE_REVISION
+    log "Playwright base revision: $BASE_REVISION"
+    git cat-file -e "$BASE_REVISION^{commit}" 2>/dev/null || git fetch -q origin "$BASE_REVISION"
+    local branch="magpie-lean-webkit-$(git rev-parse --short "$BASE_REVISION")"
+    git checkout -q -b "$branch" "$BASE_REVISION"
+    git apply --index "$patches/patches/bootstrap.diff"
+    rm -rf Tools/Playwright
+    cp -R "$patches/embedder/Playwright" Tools/Playwright
+    cp "$patches/pw_run.sh" "$patches/UPSTREAM_CONFIG.sh" Tools/Playwright/
+    git add Tools/Playwright
+    git commit -q -m "Apply Playwright WebKit patches (microsoft/playwright@${playwright_commit:0:10}, base $BASE_REVISION)"
+    rm -rf "$tmp"
+    log "branch $branch ready. Now bring over the Magpie-lean commits, e.g.:"
+    log "  git cherry-pick -x \$(git merge-base magpie-lean-base magpie-lean-webkit)..magpie-lean-webkit"
+    log "then: $0 all"
+}
 
-cd "$ROOT"
-# Strip rbenv/asdf Ruby state: WebKit's code generators expect the system Ruby.
-exec env -u GEM_HOME -u GEM_PATH -u RUBYOPT -u BUNDLE_GEMFILE \
-    "$ROOT/Tools/Scripts/build-webkit" --release --cmake --port=Mac \
-    --cmakeargs="$CMAKEARGS" "$@"
+# ----------------------------------------------------------------------------------------------
+build() {
+    cd "$ROOT"
+    [[ $reconfigure -eq 1 ]] && rm -f "$BUILD_DIR/CMakeCache.txt"
+    local swiftc="${MAGPIE_SWIFTC:-}"
+    [[ -z "$swiftc" && -x "$HOME/swift-6.3-toolchain/usr/bin/swiftc" ]] && swiftc="$HOME/swift-6.3-toolchain/usr/bin/swiftc"
+    [[ -n "$swiftc" ]] || die "no Swift 6.3 toolchain found; set MAGPIE_SWIFTC (see header comment)"
+    local cmakeargs="-C $LEAN_CACHE -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF"
+    # WEBKIT_SWIFT_COMPILER_OVERRIDE is what WebKit honours on Apple (CMAKE_Swift_COMPILER gets
+    # re-resolved through xcrun); set both.
+    cmakeargs="$cmakeargs -DCMAKE_Swift_COMPILER=$swiftc -DWEBKIT_SWIFT_COMPILER_OVERRIDE=$swiftc"
+    [[ -n "${MAGPIE_LTO:-}" ]] && cmakeargs="$cmakeargs -DLTO_MODE=$MAGPIE_LTO"
+    [[ -n "${MAGPIE_EXTRA_CMAKEARGS:-}" ]] && cmakeargs="$cmakeargs $MAGPIE_EXTRA_CMAKEARGS"
+    log "configuring + building (this is 1-2 h cold)"
+    # Strip rbenv/asdf Ruby state: WebKit's code generators expect the system Ruby.
+    env -u GEM_HOME -u GEM_PATH -u RUBYOPT -u BUNDLE_GEMFILE \
+        "$ROOT/Tools/Scripts/build-webkit" --release --cmake --port=Mac --cmakeargs="$cmakeargs"
+    [[ -x "$BUILD_DIR/Playwright.app/Contents/MacOS/Playwright" ]] || die "build finished but Playwright.app is missing"
+}
+
+# ----------------------------------------------------------------------------------------------
+bundle_name() {
+    local rev; rev="$(git -C "$ROOT" rev-parse --short HEAD)"
+    echo "magpie-webkit-$rev-mac-$(uname -m)"
+}
+
+package() {
+    cd "$ROOT"
+    local name; name="$(bundle_name)"
+    local stage="$ROOT/WebKitBuild/$name"
+    local zip="$ROOT/WebKitBuild/$name.zip"
+    rm -rf "$stage" "$zip"; mkdir -p "$stage"
+    log "staging $stage"
+    # Same set as Playwright's archive.sh for mac. XPC services live inside WebKit.framework.
+    for item in Playwright.app JavaScriptCore.framework WebCore.framework WebInspectorUI.framework WebKit.framework WebKitLegacy.framework pw_run.sh; do
+        [[ -e "$BUILD_DIR/$item" ]] || die "missing $BUILD_DIR/$item — run build first"
+        ditto "$BUILD_DIR/$item" "$stage/$item"
+    done
+    for dylib in "$BUILD_DIR"/*.dylib; do [[ -e "$dylib" ]] && ditto "$dylib" "$stage/$(basename "$dylib")"; done
+    # Headers/PrivateHeaders/Modules are symlinks into the source tree in the CMake build; a runtime
+    # bundle doesn't need them (and they'd be dangling). Drop them and any other broken symlink.
+    find "$stage" -depth -type d \( -name Headers -o -name PrivateHeaders -o -name Modules \) -prune -exec rm -rf {} +
+    find "$stage" -type l ! -exec test -e {} \; -print -delete | sed 's/^/  removed broken symlink: /' >&2 || true
+    cat > "$stage/MAGPIE_LEAN_INFO.json" <<EOF
+{
+  "bundle": "$name",
+  "webkit_commit": "$(git rev-parse HEAD)",
+  "webkit_branch": "$(git rev-parse --abbrev-ref HEAD)",
+  "playwright_upstream_config": $(python3 -c 'import json,re,sys; s=open(sys.argv[1]).read(); print(json.dumps(dict(re.findall(r"^(\w+)=\"([^\"]*)\"", s, re.M))))' "$ROOT/Tools/Playwright/UPSTREAM_CONFIG.sh"),
+  "built_on": "$(sw_vers -productVersion) / $(xcodebuild -version | tr '\n' ' ')",
+  "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "executable": "pw_run.sh"
+}
+EOF
+    (cd "$ROOT/WebKitBuild" && ditto -c -k --keepParent "$name" "$zip")
+    rm -rf "$stage"
+    log "packaged $(du -h "$zip" | cut -f1) -> $zip"
+    echo "$zip"
+}
+
+# ----------------------------------------------------------------------------------------------
+verify() {
+    cd "$ROOT"
+    local name; name="$(bundle_name)"
+    local zip="$ROOT/WebKitBuild/$name.zip"
+    [[ -f "$zip" ]] || die "no bundle at $zip — run package first"
+    local tmp; tmp="$(mktemp -d)"
+    ditto -x -k "$zip" "$tmp"
+    local exe="$tmp/$name/pw_run.sh"
+    [[ -x "$exe" ]] || die "bundle has no executable pw_run.sh"
+    [[ -d "$BENCH_DIR/node_modules/playwright-core" ]] || (cd "$BENCH_DIR" && npm install --no-fund --no-audit >/dev/null)
+    log "smoke: launch -> context -> page -> screenshot through playwright-core"
+    (cd "$BENCH_DIR" && PW_EXE="$exe" node smoke.mjs)
+    if [[ $bench -eq 1 ]]; then
+        log "benchmark vs stock Playwright webkit (installs it if needed)"
+        (cd "$BENCH_DIR" && npx playwright-core install webkit >/dev/null 2>&1 || true)
+        (cd "$BENCH_DIR" && node bench.mjs --label stock --iterations 12 >/dev/null && node bench.mjs --label lean --executable "$exe" --iterations 12 >/dev/null && node compare.mjs stock lean)
+    fi
+    rm -rf "$tmp"
+    log "verify OK"
+}
+
+# ----------------------------------------------------------------------------------------------
+case "$command" in
+    bootstrap) bootstrap ;;
+    build) build ;;
+    package) package ;;
+    verify) verify ;;
+    all) build; package; verify ;;
+esac

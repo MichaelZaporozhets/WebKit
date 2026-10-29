@@ -29,8 +29,11 @@ into how many workers fit on a CI host and how fast each capture completes.
 ## Build
 
 ```sh
-Tools/Scripts/build-magpie-webkit            # ~1-2h cold on an M4 Pro; incremental after
-ls WebKitBuild/cmake-mac/Release/{Playwright.app,pw_run.sh,WebKit.framework}
+Tools/Scripts/build-magpie-webkit            # = build + package + verify (~1-2h cold on an M4 Pro)
+Tools/Scripts/build-magpie-webkit build      # configure with Tools/Playwright/magpie-lean.cmake and build
+Tools/Scripts/build-magpie-webkit package    # WebKitBuild/magpie-webkit-<rev>-mac-arm64.zip (Playwright bundle layout, ~48 MB)
+Tools/Scripts/build-magpie-webkit verify     # unzip, launch through playwright-core, screenshot; --bench adds the stock comparison
+Tools/Scripts/build-magpie-webkit bootstrap  # re-roll: new branch at the pinned Playwright base with its patches applied
 ```
 
 Build-environment notes (not part of the design): uses Xcode's clang but the standalone Swift
