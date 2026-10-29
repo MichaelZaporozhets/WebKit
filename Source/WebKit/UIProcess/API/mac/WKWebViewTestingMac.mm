@@ -100,7 +100,11 @@
 
 - (NSSet<NSView *> *)_pdfHUDs
 {
+#if ENABLE(PDF_HUD)
     return _impl->pdfHUDs().autorelease();
+#else
+    return nil;
+#endif
 }
 
 - (NSMenu *)_activeMenu

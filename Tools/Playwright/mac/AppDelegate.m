@@ -130,7 +130,8 @@ static void applyEnvironmentPreferences(WKPreferences *preferences)
         featuresByKey[feature.key] = feature;
     [settings enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, BOOL *) {
         NSNumber *number = numberFromSetting(value);
-        if (_WKFeature *feature = featuresByKey[key]) {
+        _WKFeature *feature = featuresByKey[key];
+        if (feature) {
             [preferences _setEnabled:[number boolValue] forFeature:feature];
             return;
         }

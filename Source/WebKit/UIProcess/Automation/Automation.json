@@ -939,7 +939,7 @@
             "name": "unloadWebExtension",
             "description": "Unloads a web extension in the automation session.",
             "platform": "macos",
-            "condition": "defined(WTF_PLATFORM_MAC) && WTF_PLATFORM_MAC",
+            "condition": "defined(WTF_PLATFORM_MAC) && WTF_PLATFORM_MAC && defined(ENABLE_WK_WEB_EXTENSIONS_IN_WEBDRIVER) && ENABLE_WK_WEB_EXTENSIONS_IN_WEBDRIVER",
             "parameters": [
                 { "name": "identifier", "type": "string", "description": "The identifier of the extension to unload." }
             ],
