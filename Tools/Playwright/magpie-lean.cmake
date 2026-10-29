@@ -144,3 +144,8 @@ set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF
 #   ENABLE_VIDEO, ENABLE_WEBASSEMBLY, ENABLE_FTL_JIT, ENABLE_GPU_PROCESS, ENABLE_WEBKIT_LEGACY,
 #   ENABLE_NOTIFICATIONS, ENABLE_GEOLOCATION, ENABLE_FULLSCREEN_API, ENABLE_DRAG_SUPPORT,
 #   ENABLE_CONTEXT_MENUS, ENABLE_TEXT_AUTOSIZING, ENABLE_MATHML, ENABLE_XSLT, service workers.
+
+# --- Toolchain: the open-source swift-6.3-RELEASE toolchain accepts -emit-clang-header-min-access
+# under -typecheck (so WebKit's probe says "supported") but rejects it when emitting modules.
+# Apple's Xcode 26.4 Swift has it for real; until the build uses that, pin the probe result.
+set(SWIFT_CXX_INTEROP_SUPPORTED FALSE CACHE INTERNAL "pinned by magpie-lean.cmake (see comment)")
