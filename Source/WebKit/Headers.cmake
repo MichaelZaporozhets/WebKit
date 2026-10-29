@@ -365,6 +365,7 @@ list(APPEND WebKit_PRIVATE_FRAMEWORK_HEADERS
     UIProcess/API/Cocoa/_WKAutomationSessionConfiguration.h
     UIProcess/API/Cocoa/_WKAutomationSessionDelegate.h
     UIProcess/API/Cocoa/_WKAutomationSessionPrivateForTesting.h
+    UIProcess/API/Cocoa/_WKBrowserInspector.h
     UIProcess/API/Cocoa/_WKContentRuleListAction.h
     UIProcess/API/Cocoa/_WKContentWorldConfiguration.h
     UIProcess/API/Cocoa/_WKContextMenuElementInfo.h
