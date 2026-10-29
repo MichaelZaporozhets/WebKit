@@ -454,7 +454,22 @@ static void applyEnvironmentProcessPoolConfiguration(_WKProcessPoolConfiguration
     browserContext.dataStore = [[[WKWebsiteDataStore alloc] _initWithConfiguration:dataStoreConfiguration] autorelease];
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    browserContext.processPool = [[[WKProcessPool alloc] _initWithConfiguration:processConfiguration] autorelease];
+    // Magpie-lean: MAGPIE_SHARED_PROCESS_POOL=1 makes every browser context share the default
+    // process pool instead of getting its own. Storage/cookies stay isolated (they live in the
+    // per-context data store); what is shared is the pool of WebContent processes, so a
+    // prewarmed process is ready for the next context's first page instead of a cold spawn.
+    // Trade-off: Playwright's per-context geolocation and language overrides are per-pool and
+    // would then be shared across live contexts.
+    static BOOL sharedPool = NO;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        const char* value = getenv("MAGPIE_SHARED_PROCESS_POOL");
+        sharedPool = value && *value && strcmp(value, "0");
+    });
+    if (sharedPool)
+        browserContext.processPool = [self defaultConfiguration].processPool;
+    else
+        browserContext.processPool = [[[WKProcessPool alloc] _initWithConfiguration:processConfiguration] autorelease];
     #pragma clang diagnostic pop
     [_browserContexts addObject:browserContext];
     return browserContext;

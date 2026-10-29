@@ -81,6 +81,11 @@ _WEBKIT_ADD_CODE_SIGN(Playwright)
 file(WRITE ${CMAKE_BINARY_DIR}/pw_run.sh
 "#!/bin/bash
 DIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
+# Magpie-lean runtime defaults (each overridable from the environment; see README-magpie-lean.md):
+#  - one shared, prewarmed WebContent process pool across Playwright contexts: a page is created
+#    into a warm process instead of a cold spawn (~150 ms -> ~35 ms per context+page).
+export MAGPIE_SHARED_PROCESS_POOL=\"\${MAGPIE_SHARED_PROCESS_POOL:-1}\"
+export MAGPIE_WEBKIT_POOL=\"\${MAGPIE_WEBKIT_POOL:-prewarmsProcessesAutomatically=1}\"
 export DYLD_FRAMEWORK_PATH=\"\$DIR\${DYLD_FRAMEWORK_PATH:+:\$DYLD_FRAMEWORK_PATH}\"
 export __XPC_DYLD_FRAMEWORK_PATH=\"\$DIR\"
 export DYLD_LIBRARY_PATH=\"\$DIR\${DYLD_LIBRARY_PATH:+:\$DYLD_LIBRARY_PATH}\"

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Magpie-shaped WebKit benchmark.
+// Magpie-shaped WebKit benchmark. Companion scripts: launches.mjs (cold-launch p50), shotprobe.mjs
+// (screenshot cost by format/clip), smoke.mjs (one launch -> page -> screenshot with PW_EXE=...).
 //
 //   node bench.mjs --label stock                      # Playwright's bundled webkit-<rev>
 //   node bench.mjs --label lean --executable ../../../WebKitBuild/cmake-mac/Release/pw_run.sh
@@ -7,7 +8,7 @@
 //
 // What it measures (per label, written to out/<label>.json and printed as a table):
 //   launch_ms        webkit.launch() -> first page ready (cold process tree start)
-//   nav_ms           page.goto(fixture) incl. network idle
+//   nav_ms           page.goto(fixture) until the load event (Magpie's own settle logic runs after this)
 //   settle_ms        document.fonts.ready + 2 rAF (what Magpie waits for before capturing)
 //   shot_ms          page.screenshot() (viewport PNG)
 //   total_ms         context+page create -> screenshot bytes in hand
@@ -22,7 +23,7 @@
 import { createServer } from 'node:http';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { webkit, devices } from 'playwright-core';
 import { renderPage } from './fixtures/page.mjs';
@@ -35,7 +36,7 @@ const args = Object.fromEntries(
   }, []),
 );
 const label = args.label ?? 'stock';
-const executablePath = args.executable ? join(process.cwd(), args.executable).replace(/^\/+/, '/') : undefined;
+const executablePath = args.executable ? resolve(process.cwd(), args.executable) : undefined;
 const iterations = Number(args.iterations ?? 10);
 const rows = Number(args.rows ?? 60);
 const outDir = join(here, 'out');
@@ -110,7 +111,7 @@ for (const [name, device] of Object.entries(PROJECTS)) {
     const context = await browser.newContext(device);
     const page = await context.newPage();
     const t1 = now();
-    await page.goto(url, { waitUntil: 'networkidle' });
+    await page.goto(url, { waitUntil: 'load' });
     const t2 = now();
     await page.evaluate(() => document.fonts.ready.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))));
     const t3 = now();
@@ -131,7 +132,7 @@ for (const [name, device] of Object.entries(PROJECTS)) {
   await Promise.all(Array.from({ length: 4 }, async () => {
     const context = await browser.newContext(PROJECTS.desktop);
     const page = await context.newPage();
-    await page.goto(url, { waitUntil: 'networkidle' });
+    await page.goto(url, { waitUntil: 'load' });
     await page.screenshot({ type: 'png' });
     await context.close();
   }));
