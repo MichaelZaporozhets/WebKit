@@ -25,7 +25,9 @@
 
 #pragma once
 
-#if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
+// Used by AudioSampleBufferList/AudioSampleDataSource and the GPU-process audio plumbing
+// (RemoteMediaPlayerProxy, SharedCARingBuffer) independently of Web Audio.
+#if USE(MEDIATOOLBOX)
 
 #include <JavaScriptCore/ArrayBuffer.h>
 #include <WebCore/AudioStreamDescription.h>

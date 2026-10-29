@@ -1,0 +1,17 @@
+{
+  "name": "magpie-lean-webkit-bench",
+  "private": true,
+  "type": "module",
+  "description": "Benchmark + render-parity harness: lean WebKit vs stock Playwright WebKit, on a Magpie-shaped workload.",
+  "scripts": {
+    "install-stock-webkit": "playwright-core install webkit",
+    "bench": "node bench.mjs",
+    "compare": "node compare.mjs"
+  },
+  "devDependencies": {
+    "@shopify/polaris": "^13.9.0",
+    "pixelmatch": "^7.1.0",
+    "playwright-core": "1.63.0",
+    "pngjs": "^7.0.0"
+  }
+}

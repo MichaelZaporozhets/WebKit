@@ -26,7 +26,9 @@
 #import "config.h"
 #import "AudioVideoRendererAVFObjC.h"
 
+#if ENABLE(MEDIA_STREAM)
 #import "AudioMediaStreamTrackRenderer.h"
+#endif
 #import "CDMFairPlayStreaming.h"
 #import "CDMInstanceFairPlayStreamingAVFObjC.h"
 #import "CDMLogging.h"
@@ -89,6 +91,15 @@ static void setSynchronizerScreenReserved(AVSampleBufferRenderSynchronizer *, bo
 @end
 
 namespace WebCore {
+
+static inline bool isDefaultAudioOutputDeviceID(const String& deviceID)
+{
+#if ENABLE(MEDIA_STREAM)
+    return deviceID.isEmpty() || deviceID == AudioMediaStreamTrackRenderer::defaultDeviceID();
+#else
+    return deviceID.isEmpty() || deviceID == "default"_s;
+#endif
+}
 
 WTF_MAKE_TZONE_ALLOCATED_IMPL(AudioVideoRendererAVFObjC);
 
@@ -872,7 +883,7 @@ void AudioVideoRendererAVFObjC::setOutputDeviceId(const String& outputDeviceId)
 
 void AudioVideoRendererAVFObjC::setOutputDeviceIdOnRenderer(AVSampleBufferAudioRenderer *renderer)
 {
-    if (m_audioOutputDeviceId.isEmpty() || m_audioOutputDeviceId == AudioMediaStreamTrackRenderer::defaultDeviceID()) {
+    if (isDefaultAudioOutputDeviceID(m_audioOutputDeviceId)) {
         // FIXME(rdar://155986053): Remove the @try/@catch when this exception is resolved.
         @try {
             [renderer setAudioOutputDeviceUniqueID:nil];

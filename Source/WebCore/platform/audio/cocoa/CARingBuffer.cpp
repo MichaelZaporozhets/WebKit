@@ -26,7 +26,7 @@
 #include "config.h"
 #include "CARingBuffer.h"
 
-#if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
+#if USE(MEDIATOOLBOX)
 
 #include "CAAudioStreamDescription.h"
 #include "Logging.h"

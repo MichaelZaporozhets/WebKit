@@ -31,7 +31,9 @@
 #import "AVAssetMIMETypeCache.h"
 #import "AVAssetTrackUtilities.h"
 #import "AVTrackPrivateAVFObjCImpl.h"
+#if ENABLE(MEDIA_STREAM)
 #import "AudioMediaStreamTrackRenderer.h"
+#endif
 #import "AudioSourceProviderAVFObjC.h"
 #import "AudioTrackPrivateAVFObjC.h"
 #import "AuthenticationChallenge.h"
@@ -226,6 +228,16 @@ enum MediaPlayerAVFoundationObservationContext {
 @end
 
 namespace WebCore {
+
+static inline bool isDefaultAudioOutputDeviceID(const String& deviceID)
+{
+#if ENABLE(MEDIA_STREAM)
+    return deviceID.isEmpty() || deviceID == AudioMediaStreamTrackRenderer::defaultDeviceID();
+#else
+    return deviceID.isEmpty() || deviceID == "default"_s;
+#endif
+}
+
 static String convertEnumerationToString(AVPlayerTimeControlStatus enumerationValue)
 {
     static const std::array<NeverDestroyed<String>, 3> values {
@@ -1143,7 +1155,7 @@ void MediaPlayerPrivateAVFoundationObjC::createAVPlayer()
 #if HAVE(AUDIO_OUTPUT_DEVICE_UNIQUE_ID)
     auto audioOutputDeviceId = player->audioOutputDeviceIdOverride();
     if (!audioOutputDeviceId.isNull()) {
-        if (audioOutputDeviceId.isEmpty() || audioOutputDeviceId == AudioMediaStreamTrackRenderer::defaultDeviceID())
+        if (isDefaultAudioOutputDeviceID(audioOutputDeviceId))
             m_avPlayer.get().audioOutputDeviceUniqueID = nil;
         else
             m_avPlayer.get().audioOutputDeviceUniqueID = audioOutputDeviceId.createNSString().get();
@@ -4111,7 +4123,7 @@ void MediaPlayerPrivateAVFoundationObjC::audioOutputDeviceChanged()
     if (!m_avPlayer || !player)
         return;
     auto deviceId = player->audioOutputDeviceId();
-    if (deviceId.isEmpty() || deviceId == AudioMediaStreamTrackRenderer::defaultDeviceID())
+    if (isDefaultAudioOutputDeviceID(deviceId))
         m_avPlayer.get().audioOutputDeviceUniqueID = nil;
     else
         m_avPlayer.get().audioOutputDeviceUniqueID = deviceId.createNSString().get();

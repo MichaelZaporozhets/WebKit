@@ -26,7 +26,7 @@
 #import "config.h"
 #import "PaymentInstallmentConfigurationWebCore.h"
 
-#if HAVE(PASSKIT_INSTALLMENTS)
+#if ENABLE(APPLE_PAY_INSTALLMENTS)
 
 #import "ApplePayInstallmentConfigurationWebCore.h"
 #import "ApplePayInstallmentItemType.h"

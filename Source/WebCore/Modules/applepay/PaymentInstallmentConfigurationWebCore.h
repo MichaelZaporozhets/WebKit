@@ -25,7 +25,7 @@
 
 #pragma once
 
-#if HAVE(PASSKIT_INSTALLMENTS)
+#if ENABLE(APPLE_PAY_INSTALLMENTS)
 
 #include <WebCore/ApplePayInstallmentConfigurationWebCore.h>
 #include <wtf/RetainPtr.h>

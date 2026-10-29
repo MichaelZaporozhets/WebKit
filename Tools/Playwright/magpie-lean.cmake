@@ -41,7 +41,9 @@ set(ENABLE_ENCRYPTED_MEDIA OFF CACHE BOOL "" FORCE)
 set(ENABLE_LEGACY_ENCRYPTED_MEDIA OFF CACHE BOOL "" FORCE)
 set(ENABLE_MEDIA_SESSION OFF CACHE BOOL "" FORCE)
 set(ENABLE_MEDIA_SESSION_COORDINATOR OFF CACHE BOOL "" FORCE)
-set(ENABLE_WIRELESS_PLAYBACK_TARGET OFF CACHE BOOL "" FORCE)   # AirPlay
+# WIRELESS_PLAYBACK_TARGET stays ON: PAL's AVOutputContext SPI shim and the AVFoundation
+# media player assume it unconditionally on macOS (never exercised headlessly anyway).
+set(ENABLE_WIRELESS_PLAYBACK_TARGET ON CACHE BOOL "" FORCE)
 set(ENABLE_PICTURE_IN_PICTURE_API OFF CACHE BOOL "" FORCE)
 set(ENABLE_VIDEO_PRESENTATION_MODE OFF CACHE BOOL "" FORCE)
 set(ENABLE_AVF_CAPTIONS OFF CACHE BOOL "" FORCE)
@@ -76,7 +78,9 @@ set(ENABLE_WK_WEB_EXTENSIONS OFF CACHE BOOL "" FORCE)    # browser-extension API
 set(ENABLE_CONTENT_EXTENSIONS OFF CACHE BOOL "" FORCE)   # content blockers (Playwright routes via Network agent, not rule lists)
 set(ENABLE_CONTENT_FILTERING OFF CACHE BOOL "" FORCE)    # parental controls
 set(ENABLE_TELEPHONE_NUMBER_DETECTION OFF CACHE BOOL "" FORCE)
-set(ENABLE_ATTACHMENT_ELEMENT OFF CACHE BOOL "" FORCE)
+# ATTACHMENT_ELEMENT stays ON: Cocoa editing/drag/paste code assumes it (DragDataCocoa,
+# EditingHTMLConverter, WebContentReaderCocoa, RenderThemeCocoa).
+set(ENABLE_ATTACHMENT_ELEMENT ON CACHE BOOL "" FORCE)
 set(ENABLE_APPLICATION_MANIFEST OFF CACHE BOOL "" FORCE)
 set(ENABLE_SERVICE_CONTROLS OFF CACHE BOOL "" FORCE)     # macOS Services menu
 set(ENABLE_POINTER_LOCK OFF CACHE BOOL "" FORCE)
@@ -89,8 +93,10 @@ set(ENABLE_PDF_HUD OFF CACHE BOOL "" FORCE)
 set(ENABLE_PDFJS OFF CACHE BOOL "" FORCE)
 set(ENABLE_MHTML OFF CACHE BOOL "" FORCE)
 
-# --- Telemetry / diagnostics / accessibility plumbing that no AT client will ever attach to.
-set(ENABLE_ACCESSIBILITY_ISOLATED_TREE OFF CACHE BOOL "" FORCE)
+# --- Telemetry / diagnostics plumbing.
+# ACCESSIBILITY_ISOLATED_TREE stays ON: the Mac AX layer (AXObjectCacheMac, the ObjC
+# wrappers) is written against it. It only does work once an AT client connects.
+set(ENABLE_ACCESSIBILITY_ISOLATED_TREE ON CACHE BOOL "" FORCE)
 set(ENABLE_INSPECTOR_EXTENSIONS OFF CACHE BOOL "" FORCE)
 set(ENABLE_INSPECTOR_TELEMETRY OFF CACHE BOOL "" FORCE)
 set(ENABLE_MEMORY_SAMPLER OFF CACHE BOOL "" FORCE)
@@ -112,7 +118,7 @@ set(WEBKIT_PLATFORM_FEATURES_FORCE_OFF
     ENABLE_IMAGE_ANALYSIS                       # VisionKit Live Text
     ENABLE_IMAGE_ANALYSIS_ENHANCEMENTS
     ENABLE_IMAGE_ANALYSIS_FOR_MACHINE_READABLE_CODES
-    ENABLE_DATA_DETECTION                       # DataDetectors (phone/address/date detection)
+    # ENABLE_DATA_DETECTION stays on: ImageOverlayController{,Mac} on PLATFORM(MAC) assume it.
     ENABLE_WEB_PUSH_NOTIFICATIONS               # webpushd / Push API plumbing in Networking
     ENABLE_DECLARATIVE_WEB_PUSH
     ENABLE_VP9                                  # media codec registration; nothing plays media here
