@@ -69,6 +69,9 @@ foreach (_service IN LISTS Playwright_XPC_SERVICES)
     set_property(TARGET Playwright APPEND PROPERTY LINK_DEPENDS $<TARGET_FILE:${_service}>)
 endforeach ()
 
+# Ad-hoc signature like the other Cocoa tools (no entitlements: the Playwright shell is not sandboxed).
+_WEBKIT_ADD_CODE_SIGN(Playwright)
+
 # Launcher that playwright-core can be pointed at via PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH
 # (Magpie reads that env var in src/playwright/playwright.config.ts). Same contract as the
 # pw_run.sh that ships in the official webkit-<rev> bundle, plus the __XPC_DYLD_* variables:

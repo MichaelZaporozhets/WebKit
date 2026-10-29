@@ -58,7 +58,6 @@ set(ENABLE_WEB_AUDIO OFF CACHE BOOL "" FORCE)
 # --- GPU APIs: Polaris/admin surfaces draw with DOM, SVG and 2D canvas. No WebGL/WebGPU/XR.
 set(ENABLE_WEBGL OFF CACHE BOOL "" FORCE)                # also drops ANGLE (libANGLE-shared.dylib) via OptionsCocoa.cmake
 set(ENABLE_WEBGPU OFF CACHE BOOL "" FORCE)               # drops WebGPU.framework + its Swift/C++ interop build
-set(ENABLE_WEBGPU_SWIFT OFF CACHE BOOL "" FORCE)
 set(ENABLE_WEBXR OFF CACHE BOOL "" FORCE)
 set(ENABLE_MODEL_ELEMENT OFF CACHE BOOL "" FORCE)        # <model>, RealityKit, Model XPC service
 
